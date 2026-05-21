@@ -1,0 +1,36 @@
+@import 'tailwindcss' source(none);
+@source '../**/*.{js,ts,jsx,tsx}';
+
+@import 'tw-animate-css';
+
+/* Aurora background animation */
+@theme {
+  --animate-aurora: aurora 60s linear infinite;
+
+  @keyframes aurora {
+    from {
+      background-position: 50% 50%, 50% 50%;
+    }
+    to {
+      background-position: 350% 50%, 350% 50%;
+    }
+  }
+}
+
+/* Color variables needed by the aurora component */
+:root {
+  --white: #fff;
+  --black: #000;
+  --transparent: transparent;
+
+  /* Blue palette */
+  --blue-300: #93c5fd;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+
+  /* Indigo palette */
+  --indigo-300: #a5b4fc;
+
+  /* Violet palette */
+  --violet-200: #ddd6fe;
+}

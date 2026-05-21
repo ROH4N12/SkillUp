@@ -1,0 +1,9 @@
+node_modules/
+.env
+dist/
+build/
+.DS_Store
+py-path-generator/__pycache__/
+py-path-generator/.venv/
+py-path-generator/venv/
+py-path-generator/env/
