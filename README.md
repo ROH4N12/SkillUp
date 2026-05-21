@@ -1,7 +1,5 @@
 
-  # SkillUp UI Design
 
-  This is a code bundle for SkillUp UI Design. The original project is available at https://www.figma.com/design/Gx6udgs1fLBF9reexYyQKt/SkillUp-UI-Design.
 
   ## Running the code
 
