@@ -15,9 +15,15 @@ import {
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { apiCall } from "../hooks/useFetch";
+import { useToast } from "../contexts/ToastContext";
+import { Button } from "../components/ui/Button";
+import { Skeleton } from "../components/ui/Skeleton";
+import { AccordionContent } from "../components/ui/AccordionContent";
+
 
 export default function Settings() {
   const { theme, setTheme } = useTheme();
+  const toast = useToast();
   const userRole = localStorage.getItem('userRole') || 'learner';
 
   // Profile state
@@ -28,12 +34,12 @@ export default function Settings() {
     notifications: true, progressReminders: true, weeklyReports: false
   });
   const [profileLoading, setProfileLoading] = useState(true);
-  const [saveMsg, setSaveMsg] = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
 
   // Password state
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
-  const [passwordMsg, setPasswordMsg] = useState('');
+  const [savingPassword, setSavingPassword] = useState(false);
 
   // Fetch profile on mount
   useEffect(() => {
@@ -63,9 +69,9 @@ export default function Settings() {
   }, []);
 
   const handleSaveProfile = async () => {
-    setSaveMsg('');
+    setSavingProfile(true);
     try {
-      const result = await apiCall('/api/user/profile', 'PUT', {
+      await apiCall('/api/user/profile', 'PUT', {
         name: profile.name,
         email: profile.email,
         phone: profile.phone,
@@ -73,42 +79,69 @@ export default function Settings() {
         careerGoal: profile.careerGoal,
         preferences,
       });
-      setSaveMsg('Profile saved successfully!');
+      toast.success('Profile saved successfully!');
       // Update localStorage so header updates
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       user.name = profile.name;
       localStorage.setItem('user', JSON.stringify(user));
-      setTimeout(() => setSaveMsg(''), 3000);
     } catch (err) {
-      setSaveMsg('Failed to save profile');
+      toast.error('Failed to save profile');
+    } finally {
+      setSavingProfile(false);
     }
   };
 
   const handleChangePassword = async () => {
-    setPasswordMsg('');
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordMsg('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
     if (passwordData.newPassword.length < 6) {
-      setPasswordMsg('Password must be at least 6 characters');
+      toast.error('Password must be at least 6 characters');
       return;
     }
+    setSavingPassword(true);
     try {
       await apiCall('/api/user/password', 'PUT', {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
       });
-      setPasswordMsg('Password changed successfully!');
+      toast.success('Password changed successfully!');
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setShowPasswordForm(false);
-      setTimeout(() => setPasswordMsg(''), 3000);
     } catch (err) {
-      setPasswordMsg('Failed — current password may be incorrect');
+      toast.error('Failed — current password may be incorrect');
+    } finally {
+      setSavingPassword(false);
     }
   };
 
-  if (profileLoading) return <div className="p-6 text-center text-gray-500 dark:text-gray-400">Loading settings...</div>;
+  if (profileLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <div className="p-6 bg-white dark:bg-slate-800 rounded-2xl space-y-4 border border-gray-100 dark:border-slate-700">
+          <div className="flex items-center gap-4">
+            <Skeleton className="w-20 h-20 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   const initials = profile.name
     ? profile.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
@@ -122,17 +155,8 @@ export default function Settings() {
         <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your account preferences and settings</p>
       </div>
 
-      {/* Success message */}
-      {saveMsg && (
-        <div className={`p-3 rounded-lg text-sm font-medium flex items-center gap-2 ${
-          saveMsg.includes('success') ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200'
-        }`}>
-          <CheckCircle2 className="w-4 h-4" />
-          {saveMsg}
-        </div>
-      )}
-
       {/* Profile Settings */}
+
       <DashboardCard title="Profile Information">
         <div className="space-y-4">
           <div className="flex items-center gap-4">
@@ -218,15 +242,18 @@ export default function Settings() {
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <button
+            <Button
+              variant="primary"
+              icon={Save}
+              loading={savingProfile}
+              loadingText="Saving Changes..."
               onClick={handleSaveProfile}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
             >
-              <Save className="w-4 h-4" />
               Save Changes
-            </button>
+            </Button>
           </div>
         </div>
+
       </DashboardCard>
 
       {/* Notification Settings */}
@@ -272,14 +299,14 @@ export default function Settings() {
             </div>
             <button
               onClick={() => setShowPasswordForm(!showPasswordForm)}
-              className="px-4 py-2 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
+              className="px-4 py-2 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all text-sm select-none"
             >
               {showPasswordForm ? 'Cancel' : 'Change'}
             </button>
           </div>
 
-          {showPasswordForm && (
-            <div className="space-y-3 pl-8">
+          <AccordionContent isOpen={showPasswordForm}>
+            <div className="space-y-3 pl-8 pb-2">
               <input
                 type="password"
                 placeholder="Current password"
@@ -301,17 +328,20 @@ export default function Settings() {
                 onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500"
               />
-              {passwordMsg && (
-                <p className={`text-sm ${passwordMsg.includes('success') ? 'text-green-600' : 'text-red-600'}`}>{passwordMsg}</p>
-              )}
-              <button
-                onClick={handleChangePassword}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
-              >
-                Update Password
-              </button>
+              <div className="pt-1">
+                <Button
+                  variant="primary"
+                  loading={savingPassword}
+                  loadingText="Updating Password..."
+                  onClick={handleChangePassword}
+                >
+                  Update Password
+                </Button>
+              </div>
             </div>
-          )}
+          </AccordionContent>
+
+
 
           <div className="flex items-center justify-between py-3">
             <div className="flex items-start gap-3">

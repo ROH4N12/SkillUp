@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { DashboardCard } from "../components/DashboardCard";
 import { ProgressBar } from "../components/ProgressBar";
 import { 
@@ -7,41 +7,81 @@ import {
   CheckCircle2, 
   Circle, 
   Play,
-  BookOpen,
-  Award,
-  X,
-  Sparkles,
-  AlertCircle,
-  ChevronDown,
-  ChevronUp,
-  ExternalLink,
-  Youtube
+  BookOpen, 
+  Award, 
+  Sparkles, 
+  AlertCircle, 
+  ChevronDown, 
+  ChevronUp, 
+  ExternalLink, 
+  Youtube,
+  Check
 } from "lucide-react";
 
 import { useFetch, apiCall } from "../hooks/useFetch";
+import { useToast } from "../contexts/ToastContext";
+import { Button } from "../components/ui/Button";
+import { Modal } from "../components/ui/Modal";
+import { Skeleton, SkeletonMetrics, SkeletonChart, SkeletonCourse } from "../components/ui/Skeleton";
+import { AccordionContent } from "../components/ui/AccordionContent";
+
 
 export default function LearningPath() {
-  const { data: pathData, loading, refetch } = useFetch('/api/learner/path');
+  const { data: pathData, loading, refetch, mutate: mutatePath } = useFetch('/api/learner/path');
   const { data: dashboardData, refetch: refetchDashboard } = useFetch('/api/learner/dashboard');
+  const toast = useToast();
 
   const [showModal, setShowModal] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [generationStep, setGenerationStep] = useState(0);
   const [genError, setGenError] = useState('');
   const [formData, setFormData] = useState({ goal: '', level: 'Beginner', knownSkills: '' });
+  const [actionLoadingCourse, setActionLoadingCourse] = useState(null);
 
   // Video expansion state
   const [expandedCourse, setExpandedCourse] = useState(null);
   const [courseVideos, setCourseVideos] = useState({});
   const [loadingVideos, setLoadingVideos] = useState(null);
 
+  const generationStages = [
+    "Analyzing learning goal...",
+    "Identifying required skills...",
+    "Building learning path...",
+    "Finding relevant courses & resources...",
+    "Learning path ready!"
+  ];
+
   const handleMarkComplete = async (courseId) => {
+    setActionLoadingCourse(courseId);
+
+    // 1. Optimistic local update so UI immediately updates without page jumping or scrolling
+    mutatePath(prev => {
+      if (!prev || !prev.stages) return prev;
+      return {
+        ...prev,
+        stages: prev.stages.map(stage => ({
+          ...stage,
+          courses: (stage.courses || []).map(c =>
+            c._id === courseId ? { ...c, status: "Completed", progress: 100 } : c
+          )
+        }))
+      };
+    });
+
+    toast.success("Course marked as complete!");
+
     try {
       await apiCall(`/api/learner/complete/${courseId}`, 'PUT');
       await apiCall('/api/activity/log', 'POST', { activity: 'course_completed' });
-      refetch();
-      refetchDashboard();
+      // 2. Silent refetch - keeps exact scroll position, never triggers loading unmount!
+      await refetch({ silent: true });
+      refetchDashboard({ silent: true });
     } catch (err) {
       console.error(err);
+      toast.error("Failed to update course status. Reverting changes.");
+      refetch({ silent: true });
+    } finally {
+      setActionLoadingCourse(null);
     }
   };
 
@@ -49,9 +89,12 @@ export default function LearningPath() {
     if (!window.confirm('Are you sure you want to reset ALL your progress? This cannot be undone.')) return;
     try {
       await apiCall('/api/learner/progress/reset', 'DELETE');
-      refetch();
+      toast.info("Progress has been reset");
+      refetch({ silent: true });
+      refetchDashboard({ silent: true });
     } catch (err) {
       console.error(err);
+      toast.error("Failed to reset progress");
     }
   };
 
@@ -59,6 +102,13 @@ export default function LearningPath() {
     e.preventDefault();
     setGenerating(true);
     setGenError('');
+    setGenerationStep(0);
+
+    // Intentional step transitions reflecting the generation pipeline
+    const stepInterval = setInterval(() => {
+      setGenerationStep(prev => (prev < generationStages.length - 2 ? prev + 1 : prev));
+    }, 900);
+
     try {
       const result = await apiCall('/api/learner/generate-path', 'POST', {
         goal: formData.goal,
@@ -66,14 +116,22 @@ export default function LearningPath() {
         knownSkills: formData.knownSkills.split(',').map(s => s.trim()).filter(Boolean)
       });
 
+      clearInterval(stepInterval);
+
       if (result.path === null) {
         setGenError(result.message);
       } else {
-        setShowModal(false);
-        setFormData({ goal: '', level: 'Beginner', knownSkills: '' });
-        refetch();
+        setGenerationStep(generationStages.length - 1);
+        setTimeout(() => {
+          setShowModal(false);
+          setFormData({ goal: '', level: 'Beginner', knownSkills: '' });
+          toast.success("Learning path generated successfully!");
+          refetch({ silent: true });
+          refetchDashboard({ silent: true });
+        }, 400);
       }
     } catch (err) {
+      clearInterval(stepInterval);
       setGenError('Failed to generate path. Please try again.');
     } finally {
       setGenerating(false);
@@ -103,34 +161,55 @@ export default function LearningPath() {
   };
 
   const toggleVideoComplete = async (courseId, videoId, currentlyCompleted) => {
+    const nextCompleted = !currentlyCompleted;
+
+    // Optimistic video update
+    setCourseVideos(prev => ({
+      ...prev,
+      [courseId]: (prev[courseId] || []).map(v =>
+        v.videoId === videoId ? { ...v, completed: nextCompleted } : v
+      ),
+    }));
+
+    toast.info(nextCompleted ? "Video marked as watched" : "Video marked as unwatched");
+
     try {
       await apiCall('/api/learner/videos/complete', 'PUT', {
         courseId,
         videoId,
-        completed: !currentlyCompleted,
+        completed: nextCompleted,
       });
 
-      if (!currentlyCompleted) {
+      if (nextCompleted) {
         await apiCall('/api/activity/log', 'POST', { activity: 'video_completed' });
       }
 
-      // Update local video state
-      setCourseVideos(prev => ({
-        ...prev,
-        [courseId]: prev[courseId].map(v =>
-          v.videoId === videoId ? { ...v, completed: !currentlyCompleted } : v
-        ),
-      }));
-
-      // Refetch path to update progress bars
-      refetch();
-      refetchDashboard();
+      // Silent refetch to update progress bars without scrolling or flashing
+      refetch({ silent: true });
+      refetchDashboard({ silent: true });
     } catch (err) {
       console.error('Failed to toggle video:', err);
+      toast.error("Failed to update video status");
+      refetch({ silent: true });
     }
   };
 
-  if (loading) return <div className="p-6 text-center text-gray-500 dark:text-gray-400">Loading learning path...</div>;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-64" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+          <Skeleton className="h-10 w-36 rounded-xl" />
+        </div>
+        <SkeletonMetrics count={4} />
+        <SkeletonChart height="h-28" />
+        <SkeletonCourse count={3} />
+      </div>
+    );
+  }
 
   // Build stages from API data
   const stages = pathData?.stages || [];
@@ -160,152 +239,182 @@ export default function LearningPath() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{pathData?.title || 'No Path Assigned'}</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">{pathData?.subtitle || 'Click "Customize Path" to generate your personalized roadmap!'}</p>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{pathData?.title || 'No Path Assigned'}</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{pathData?.subtitle || 'Click "Customize Path" to generate your personalized roadmap!'}</p>
         </div>
-        <button 
+        <Button 
+          variant="primary"
+          icon={Sparkles}
           onClick={() => setShowModal(true)}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
         >
-          <Sparkles className="w-4 h-4" />
           Customize Path
-        </button>
+        </Button>
       </div>
 
-      {/* Customize Path Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Generate Learning Path</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Enter your goal and we'll build a personalized roadmap</p>
+      {/* Customize Path Modal with Intentional Backend Stages */}
+      <Modal
+        isOpen={showModal}
+        onClose={() => { if (!generating) { setShowModal(false); setGenError(''); } }}
+        title="Generate Learning Path"
+        subtitle="Enter your target engineering goal and we'll build a tailored curriculum"
+      >
+        {generating ? (
+          <div className="py-6 space-y-5">
+            <div className="text-center space-y-2">
+              <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto">
+                <Sparkles className="w-6 h-6 animate-pulse" />
               </div>
-              <button onClick={() => { setShowModal(false); setGenError(''); }} className="p-2 hover:bg-gray-50 dark:bg-slate-800 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              </button>
+              <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-base">Creating Your Roadmap</h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Please wait while the AI curriculum engine crafts your path</p>
             </div>
 
-            <form onSubmit={handleGeneratePath} className="space-y-5">
-              {/* Goal */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Target Goal *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.goal}
-                  onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
-                  placeholder="e.g. Frontend Development, Data Science, Machine Learning..."
-                  className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:focus:ring-purple-500 transition-all"
-                />
-                <p className="text-xs text-gray-400 mt-1">Engineering domains: Frontend, Backend, Data Science, ML, Cybersecurity, Cloud, UI/UX, Mobile</p>
-              </div>
-
-              {/* Level */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Level</label>
-                <select
-                  value={formData.level}
-                  onChange={(e) => setFormData({ ...formData, level: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:focus:ring-purple-500 transition-all"
-                >
-                  <option value="Beginner">Beginner</option>
-                  <option value="Intermediate">Intermediate</option>
-                  <option value="Advanced">Advanced</option>
-                </select>
-              </div>
-
-              {/* Known Skills */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Known Skills (optional)</label>
-                <input
-                  type="text"
-                  value={formData.knownSkills}
-                  onChange={(e) => setFormData({ ...formData, knownSkills: e.target.value })}
-                  placeholder="e.g. Python, JavaScript, HTML (comma separated)"
-                  className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:focus:ring-purple-500 transition-all"
-                />
-              </div>
-
-              {/* Error */}
-              {genError && (
-                <div className="p-4 bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 border border-red-200 dark:border-red-800 dark:border-red-800 rounded-lg flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-700 dark:text-red-300 dark:text-red-400">{genError}</p>
-                </div>
-              )}
-
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={generating}
-                className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-wait font-medium transition-colors flex items-center justify-center gap-2"
-              >
-                {generating ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" />
-                    Generate Path
-                  </>
-                )}
-              </button>
-            </form>
+            <div className="bg-gray-50 dark:bg-slate-700/40 rounded-xl p-4 space-y-3 border border-gray-100 dark:border-slate-700">
+              {generationStages.map((stage, idx) => {
+                const isPassed = idx < generationStep;
+                const isCurrent = idx === generationStep;
+                return (
+                  <div key={idx} className="flex items-center gap-3 text-xs transition-colors duration-200">
+                    {isPassed ? (
+                      <div className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 flex items-center justify-center flex-shrink-0">
+                        <Check className="w-3 h-3" />
+                      </div>
+                    ) : isCurrent ? (
+                      <div className="w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0">
+                        <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : (
+                      <div className="w-5 h-5 rounded-full border border-gray-300 dark:border-slate-600 flex-shrink-0" />
+                    )}
+                    <span className={`
+                      ${isCurrent ? "font-semibold text-purple-700 dark:text-purple-300" : isPassed ? "text-gray-700 dark:text-gray-300" : "text-gray-400 dark:text-gray-500"}
+                    `}>
+                      {stage}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <form onSubmit={handleGeneratePath} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider">
+                Target Goal *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.goal}
+                onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
+                placeholder="e.g. Frontend Development, Data Science, Cloud Engineering..."
+                className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+              />
+              <p className="text-[11px] text-gray-400 mt-1">Recommended: Frontend, Backend, Data Science, ML, Cloud, Cybersecurity</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider">
+                Current Level
+              </label>
+              <select
+                value={formData.level}
+                onChange={(e) => setFormData({ ...formData, level: e.target.value })}
+                className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+              >
+                <option value="Beginner">Beginner (Foundational principles)</option>
+                <option value="Intermediate">Intermediate (Real-world applications)</option>
+                <option value="Advanced">Advanced (Architecture & optimization)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider">
+                Known Skills (Optional)
+              </label>
+              <input
+                type="text"
+                value={formData.knownSkills}
+                onChange={(e) => setFormData({ ...formData, knownSkills: e.target.value })}
+                placeholder="e.g. Python, JavaScript, HTML (comma separated)"
+                className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+              />
+            </div>
+
+            {genError && (
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>{genError}</span>
+              </div>
+            )}
+
+            <div className="pt-2 flex justify-end gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                icon={Sparkles}
+              >
+                Generate Path
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <DashboardCard>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-              <Target className="w-5 h-5 text-indigo-600" />
+            <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/40 rounded-lg flex items-center justify-center">
+              <Target className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Target Goal</p>
-              <p className="font-semibold text-gray-900 dark:text-white">{pathData?.goal || pathData?.title || 'Not set'}</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">{pathData?.goal || pathData?.title || 'Not set'}</p>
             </div>
           </div>
         </DashboardCard>
 
         <DashboardCard>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
+            <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-lg flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Completed</p>
-              <p className="font-semibold text-gray-900 dark:text-white">{completedCourses} / {totalCourses} Courses</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">{completedCourses} / {totalCourses} Courses</p>
             </div>
           </div>
         </DashboardCard>
 
         <DashboardCard>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Clock className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
+              <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Daily Activity</p>
-              <p className="font-semibold text-gray-900 dark:text-white">{dashboardData?.metrics?.learningStreak || 0} Days Active</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">{dashboardData?.metrics?.learningStreak || 0} Days Active</p>
             </div>
           </div>
         </DashboardCard>
 
         <DashboardCard>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Award className="w-5 h-5 text-purple-600" />
+            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/40 rounded-lg flex items-center justify-center">
+              <Award className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Skills Gained</p>
-              <p className="font-semibold text-gray-900 dark:text-white">{dashboardData?.metrics?.skillsMastered || 0} Skills</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">{dashboardData?.metrics?.skillsMastered || 0} Skills</p>
             </div>
           </div>
         </DashboardCard>
@@ -325,16 +434,16 @@ export default function LearningPath() {
                 {/* Phase Header */}
                 <div className="flex items-center gap-4 mb-4">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    phase.status === "completed" ? "bg-green-100" :
-                    phase.status === "in-progress" ? "bg-blue-100" :
-                    "bg-gray-50 dark:bg-slate-800"
+                    phase.status === "completed" ? "bg-green-100 dark:bg-green-900/40" :
+                    phase.status === "in-progress" ? "bg-blue-100 dark:bg-blue-900/40" :
+                    "bg-gray-50 dark:bg-slate-700"
                   }`}>
                     {phase.status === "completed" ? (
-                      <CheckCircle2 className="w-5 h-5 text-green-600" />
+                      <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
                     ) : phase.status === "in-progress" ? (
-                      <Play className="w-5 h-5 text-blue-600" />
+                      <Play className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     ) : (
-                      <Circle className="w-5 h-5 text-gray-400" />
+                      <Circle className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                     )}
                   </div>
                   <div>
@@ -402,20 +511,23 @@ export default function LearningPath() {
                             {/* Video expand button */}
                             <button
                               onClick={() => toggleVideos(course._id)}
-                              className="px-3 py-1 rounded-lg text-xs font-medium bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-300 dark:text-red-300 dark:text-red-400 border border-red-200 dark:border-red-800 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors flex items-center gap-1.5"
+                              className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all flex items-center gap-1.5 active:scale-95"
                             >
                               <Youtube className="w-3.5 h-3.5" />
                               Videos
-                              {expandedCourse === course._id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                              {expandedCourse === course._id ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                             </button>
                             {course.status !== "completed" && (
-                              <button 
+                              <Button 
+                                size="sm"
+                                variant="success"
+                                loading={actionLoadingCourse === course._id}
+                                loadingText="Saving..."
                                 onClick={() => handleMarkComplete(course._id)}
-                                className="px-3 py-1 rounded-lg text-xs font-medium bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-1"
+                                icon={CheckCircle2}
                               >
-                                <CheckCircle2 className="w-3 h-3" />
                                 Mark Complete
-                              </button>
+                              </Button>
                             )}
                           </div>
                         </div>
@@ -429,8 +541,8 @@ export default function LearningPath() {
                         )}
                       </div>
 
-                      {/* ── Expandable Video Section ───────────────────── */}
-                      {expandedCourse === course._id && (
+                      {/* ── Expandable Video Section with smooth in/out animation ── */}
+                      <AccordionContent isOpen={expandedCourse === course._id}>
                         <div className="border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 dark:bg-gray-900/30 p-4 rounded-b-lg">
                           {loadingVideos === course._id ? (
                             <div className="flex items-center justify-center py-6 gap-2 text-gray-400">
@@ -482,14 +594,14 @@ export default function LearningPath() {
                                       href={`https://www.youtube.com/watch?v=${video.videoId}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="p-1.5 rounded-md text-indigo-700 dark:text-indigo-300 dark:text-indigo-300 dark:text-indigo-400 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/30 transition-colors"
+                                      className="p-1.5 rounded-md text-indigo-700 dark:text-indigo-300 dark:text-indigo-300 dark:text-indigo-400 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/30 transition-colors active:scale-90"
                                       title="Watch on YouTube"
                                     >
                                       <ExternalLink className="w-4 h-4" />
                                     </a>
                                     <button
                                       onClick={() => toggleVideoComplete(course._id, video.videoId, video.completed)}
-                                      className={`p-1.5 rounded-md transition-colors ${
+                                      className={`p-1.5 rounded-md transition-all active:scale-90 ${
                                         video.completed
                                           ? 'text-green-700 dark:text-green-300 dark:text-green-300 bg-green-100 dark:bg-green-900/40 hover:bg-green-200'
                                           : 'text-gray-400 hover:text-green-700 dark:text-green-300 dark:text-green-300 hover:bg-green-100 dark:bg-green-900/30 dark:hover:bg-green-900/20'
@@ -516,7 +628,8 @@ export default function LearningPath() {
                             <p className="text-sm text-gray-400 text-center py-4">No videos available for this course.</p>
                           )}
                         </div>
-                      )}
+                      </AccordionContent>
+
                     </div>
                   ))}
                 </div>
@@ -549,12 +662,13 @@ export default function LearningPath() {
             <p className="text-sm text-red-700 dark:text-red-300 dark:text-red-300 mb-3">
               This will reset progress for all courses in your learning path. Your path will remain but all courses will go back to "Not Started".
             </p>
-            <button
+            <Button
+              variant="danger"
+              size="sm"
               onClick={handleResetProgress}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
             >
               Reset All Progress
-            </button>
+            </Button>
           </div>
         </DashboardCard>
       )}

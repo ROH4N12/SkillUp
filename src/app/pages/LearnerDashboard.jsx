@@ -26,12 +26,27 @@ import {
 
 import { useFetch, apiCall } from "../hooks/useFetch";
 import { Link } from "react-router";
+import { Skeleton, SkeletonMetrics, SkeletonChart } from "../components/ui/Skeleton";
 
 export default function LearnerDashboard() {
   const { data: dashboardData, loading: dashboardLoading } = useFetch('/api/learner/dashboard');
   const { data: pathData, loading: pathLoading } = useFetch('/api/learner/path');
 
-  if (dashboardLoading || pathLoading) return <div className="p-6 text-center text-gray-500 dark:text-gray-400">Loading...</div>;
+  if (dashboardLoading || pathLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-56" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+        <SkeletonMetrics count={4} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SkeletonChart height="h-72" />
+          <SkeletonChart height="h-72" />
+        </div>
+      </div>
+    );
+  }
 
   const metrics = dashboardData?.metrics || {};
   const currentCourse = dashboardData?.currentCourse;
@@ -43,6 +58,7 @@ export default function LearnerDashboard() {
 
   return (
     <div className="space-y-6">
+
       {/* Header */}
       <div>
         <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Welcome back! 👋</h1>
@@ -55,14 +71,14 @@ export default function LearnerDashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Career Readiness</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-2">{metrics.readiness || 0}%</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mt-2">{metrics.readiness || 0}%</p>
               <p className="text-xs text-green-700 dark:text-green-300 dark:text-green-300 mt-1 flex items-center gap-1">
                 <TrendingUp className="w-3 h-3" />
                 Live Data
               </p>
             </div>
-            <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-              <Target className="w-6 h-6 text-indigo-600" />
+            <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/40 rounded-lg flex items-center justify-center">
+              <Target className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
             </div>
           </div>
         </DashboardCard>
@@ -71,11 +87,11 @@ export default function LearnerDashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Courses Completed</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-2">{metrics.completed || 0}</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mt-2">{metrics.completed || 0}</p>
               <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{metrics.inProgress || 0} in progress</p>
             </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-purple-600" />
+            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/40 rounded-lg flex items-center justify-center">
+              <BookOpen className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             </div>
           </div>
         </DashboardCard>
@@ -84,11 +100,11 @@ export default function LearnerDashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Skills Mastered</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-2">{metrics.skillsMastered || 0}</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mt-2">{metrics.skillsMastered || 0}</p>
               <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">From completed courses</p>
             </div>
-            <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
-              <Award className="w-6 h-6 text-teal-600" />
+            <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/40 rounded-lg flex items-center justify-center">
+              <Award className="w-6 h-6 text-teal-600 dark:text-teal-400" />
             </div>
           </div>
         </DashboardCard>
@@ -97,11 +113,11 @@ export default function LearnerDashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Remaining Courses</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-2">{metrics.remainingCourses || 0}</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mt-2">{metrics.remainingCourses || 0}</p>
               <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">of {metrics.totalPathCourses || 0} total</p>
             </div>
-            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <Zap className="w-6 h-6 text-yellow-600" />
+            <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg flex items-center justify-center">
+              <Zap className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
             </div>
           </div>
         </DashboardCard>

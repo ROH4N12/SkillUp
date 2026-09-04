@@ -11,14 +11,21 @@ import {
 } from "recharts";
 
 import { useFetch, apiCall } from "../hooks/useFetch";
+import { useToast } from "../contexts/ToastContext";
+import { Button } from "../components/ui/Button";
+import { Modal } from "../components/ui/Modal";
+import { Skeleton, SkeletonMetrics, SkeletonChart, SkeletonList, SkeletonCourse } from "../components/ui/Skeleton";
 
 export default function CounselorDashboard() {
   const { data, loading, refetch } = useFetch('/api/counselor/dashboard');
-  const [sendingTo, setSendingTo] = useState(null);
+  const toast = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLearnerId, setSelectedLearnerId] = useState(null);
   const [learnerDetail, setLearnerDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+
+  // Send message modal state
+  const [messageModal, setMessageModal] = useState({ open: false, learnerId: null, learnerName: '', message: '', sending: false });
 
   const learnerData = data?.learners || [];
   const activeLearners = data?.activeLearners || 0;
@@ -34,7 +41,7 @@ export default function CounselorDashboard() {
     { name: "Critical", value: 0, color: "#ef4444" },
   ];
 
-  // ── Search filter (must be called before any early return) ─────────
+  // ── Search filter ──────────────────────────────────────────────────
   const filteredLearners = useMemo(() => {
     if (!searchQuery.trim()) return learnerData;
     const q = searchQuery.toLowerCase();
@@ -46,33 +53,27 @@ export default function CounselorDashboard() {
     );
   }, [learnerData, searchQuery]);
 
-  if (loading) return <div className="p-6 text-center text-gray-500 dark:text-gray-400">Loading counselor dashboard...</div>;
-
-  // ── Readiness distribution (from filtered data) ────────────────────
-  const readinessDistribution = [
-    { range: "90-100%", count: learnerData.filter(l => l.readiness >= 90).length },
-    { range: "75-89%", count: learnerData.filter(l => l.readiness >= 75 && l.readiness < 90).length },
-    { range: "60-74%", count: learnerData.filter(l => l.readiness >= 60 && l.readiness < 75).length },
-    { range: "Below 60%", count: learnerData.filter(l => l.readiness < 60).length },
-  ];
-
   // ── Notification sending ───────────────────────────────────────────
-  const handleSendNotification = async (learnerId, learnerName) => {
-    const message = window.prompt(`Send a message to ${learnerName}:`);
-    if (!message) return;
-    setSendingTo(learnerId);
+  const handleOpenNotificationModal = (learnerId, learnerName) => {
+    setMessageModal({ open: true, learnerId, learnerName, message: '', sending: false });
+  };
+
+  const handleSendMessageSubmit = async (e) => {
+    e.preventDefault();
+    if (!messageModal.learnerId || !messageModal.message.trim()) return;
+    setMessageModal(prev => ({ ...prev, sending: true }));
     try {
       await apiCall('/api/notifications/send', 'POST', {
-        userId: learnerId,
+        userId: messageModal.learnerId,
         title: `Counselor Recommendation`,
-        message,
+        message: messageModal.message.trim(),
         type: 'counselor',
       });
-      alert(`Notification sent to ${learnerName}!`);
+      toast.success(`Notification sent to ${messageModal.learnerName}!`);
+      setMessageModal({ open: false, learnerId: null, learnerName: '', message: '', sending: false });
     } catch (err) {
-      alert('Failed to send notification');
-    } finally {
-      setSendingTo(null);
+      toast.error('Failed to send notification');
+      setMessageModal(prev => ({ ...prev, sending: false }));
     }
   };
 
@@ -85,6 +86,7 @@ export default function CounselorDashboard() {
       setLearnerDetail(detail);
     } catch (err) {
       setLearnerDetail(null);
+      toast.error("Failed to load learner details");
     } finally {
       setDetailLoading(false);
     }
@@ -95,8 +97,33 @@ export default function CounselorDashboard() {
     setLearnerDetail(null);
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-60" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+        <SkeletonMetrics count={4} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SkeletonChart height="h-72" />
+          <SkeletonChart height="h-72" />
+        </div>
+        <SkeletonList rows={5} />
+      </div>
+    );
+  }
+
+  const readinessDistribution = [
+    { range: "90-100%", count: learnerData.filter(l => l.readiness >= 90).length },
+    { range: "75-89%", count: learnerData.filter(l => l.readiness >= 75 && l.readiness < 90).length },
+    { range: "60-74%", count: learnerData.filter(l => l.readiness >= 60 && l.readiness < 75).length },
+    { range: "Below 60%", count: learnerData.filter(l => l.readiness < 60).length },
+  ];
+
   return (
     <div className="space-y-6">
+
       {/* Header */}
       <div>
         <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Counselor Dashboard</h1>
@@ -300,10 +327,9 @@ export default function CounselorDashboard() {
                           View Details
                         </button>
                         <button
-                          onClick={() => handleSendNotification(learner._id, learner.name)}
-                          disabled={sendingTo === learner._id}
-                          className="p-1.5 text-gray-400 hover:text-indigo-700 dark:text-indigo-300 dark:text-indigo-300 dark:hover:text-indigo-400 disabled:opacity-50"
-                          title="Send message"
+                          onClick={() => handleOpenNotificationModal(learner._id, learner.name)}
+                          className="p-1.5 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                          title="Send recommendation"
                         >
                           <Send className="w-4 h-4" />
                         </button>
@@ -324,54 +350,56 @@ export default function CounselorDashboard() {
             <p className="text-sm text-gray-400 text-center py-8">🎉 No at-risk learners — everyone is making good progress!</p>
           ) : (
             atRiskLearners.map((learner, idx) => (
-              <div key={learner._id || idx} className={`p-4 rounded-lg border ${
-                learner.risk === "High" ? "bg-red-100 dark:bg-red-900/30 dark:bg-red-900/20 border-red-200 dark:border-red-800 dark:border-red-800" : "bg-yellow-100 dark:bg-yellow-900/30 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 dark:border-yellow-800"
+              <div key={learner._id || idx} className={`p-4 rounded-xl border transition-all ${
+                learner.risk === "High" ? "bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800/60" : "bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/60"
               }`}>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <AlertTriangle className={`w-5 h-5 ${
-                        learner.risk === "High" ? "text-red-600" : "text-yellow-600"
+                        learner.risk === "High" ? "text-rose-600" : "text-amber-600"
                       }`} />
                       <h4 className="font-semibold text-gray-900 dark:text-gray-100">{learner.name}</h4>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        learner.risk === "High" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        learner.risk === "High" ? "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300" : "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
                       }`}>
                         {learner.risk} Risk
                       </span>
                     </div>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
+                    <p className="text-xs text-gray-600 dark:text-gray-300 mb-1 leading-relaxed">
                       {learner.risk === "High"
                         ? `Readiness score at ${learner.readiness}%, ${learner.skillGap} critical skill gaps identified.`
                         : `Progress at ${learner.readiness}%, ${learner.skillGap} skills need attention.`
                       }
                     </p>
                     {learner.missingSkills?.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-2">
+                      <div className="flex flex-wrap gap-1 mb-3">
                         {learner.missingSkills.slice(0, 5).map((skill, i) => (
-                          <span key={i} className="px-2 py-0.5 text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-600 rounded text-gray-500 dark:text-gray-400">
+                          <span key={i} className="px-2 py-0.5 text-[11px] bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md text-gray-600 dark:text-gray-300">
                             {skill}
                           </span>
                         ))}
                         {learner.missingSkills.length > 5 && (
-                          <span className="px-2 py-0.5 text-xs text-gray-500 dark:text-gray-400">+{learner.missingSkills.length - 5} more</span>
+                          <span className="px-2 py-0.5 text-[11px] text-gray-500 dark:text-gray-400">+{learner.missingSkills.length - 5} more</span>
                         )}
                       </div>
                     )}
-                    <div className="flex gap-2">
-                      <button
+                    <div className="flex gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        variant="secondary"
                         onClick={() => handleViewDetails(learner._id)}
-                        className="px-3 py-1.5 text-sm font-medium bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100"
                       >
                         View Profile
-                      </button>
-                      <button
-                        onClick={() => handleSendNotification(learner._id, learner.name)}
-                        disabled={sendingTo === learner._id}
-                        className="px-3 py-1.5 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        icon={Send}
+                        onClick={() => handleOpenNotificationModal(learner._id, learner.name)}
                       >
-                        {sendingTo === learner._id ? 'Sending...' : 'Send Recommendation'}
-                      </button>
+                        Send Recommendation
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -381,161 +409,203 @@ export default function CounselorDashboard() {
         </div>
       </DashboardCard>
 
+
+      {/* ── Send Message Modal ─────────────────────────────────────── */}
+      <Modal
+        isOpen={messageModal.open}
+        onClose={() => setMessageModal({ open: false, learnerId: null, learnerName: '', message: '', sending: false })}
+        title="Send Counselor Recommendation"
+        subtitle={`Recommendation to ${messageModal.learnerName || 'Learner'}`}
+      >
+        <form onSubmit={handleSendMessageSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider">
+              Guidance / Recommendation Message
+            </label>
+            <textarea
+              required
+              rows={4}
+              value={messageModal.message}
+              onChange={(e) => setMessageModal(prev => ({ ...prev, message: e.target.value }))}
+              placeholder="e.g. Schedule a 1:1 check-in, review foundational courses in Stage 1..."
+              className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all resize-none"
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="secondary"
+              onClick={() => setMessageModal({ open: false, learnerId: null, learnerName: '', message: '', sending: false })}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              loading={messageModal.sending}
+              loadingText="Sending..."
+              icon={Send}
+            >
+              Send Recommendation
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
       {/* ── Learner Detail Modal ──────────────────────────────────────── */}
-      {selectedLearnerId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closeDetailModal}>
-          <div
-            className="bg-gray-50 dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
-            onClick={e => e.stopPropagation()}
-          >
-            {detailLoading ? (
-              <div className="p-12 text-center text-gray-500 dark:text-gray-400">Loading learner details...</div>
-            ) : learnerDetail ? (
-              <div>
-                {/* Modal Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-700">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-lg font-semibold">
-                        {learnerDetail.name.split(' ').map(n => n[0]).join('')}
-                      </span>
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{learnerDetail.name}</h2>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{learnerDetail.email}</p>
-                    </div>
-                  </div>
-                  <button onClick={closeDetailModal} className="p-2 hover:bg-gray-50 dark:bg-slate-800 dark:hover:bg-gray-700 rounded-lg">
-                    <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                  </button>
+      <Modal
+        isOpen={Boolean(selectedLearnerId)}
+        onClose={closeDetailModal}
+        maxWidth="max-w-2xl"
+        title={learnerDetail ? learnerDetail.name : "Learner Profile"}
+        subtitle={learnerDetail?.email}
+      >
+        {detailLoading ? (
+          <div className="py-8 space-y-4">
+            <Skeleton className="h-6 w-48 mx-auto" />
+            <SkeletonMetrics count={4} />
+            <SkeletonCourse count={2} />
+          </div>
+        ) : learnerDetail ? (
+          <div className="space-y-5">
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-indigo-50/50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 rounded-xl p-3 text-center">
+                <p className="text-lg font-bold text-indigo-700 dark:text-indigo-300">{learnerDetail.readiness}%</p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Readiness</p>
+              </div>
+              <div className="bg-emerald-50/50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40 rounded-xl p-3 text-center">
+                <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300">{learnerDetail.completed}</p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Completed</p>
+              </div>
+              <div className="bg-amber-50/50 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900/40 rounded-xl p-3 text-center">
+                <p className="text-lg font-bold text-amber-700 dark:text-amber-300">{learnerDetail.inProgress}</p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">In Progress</p>
+              </div>
+              <div className="bg-rose-50/50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/40 rounded-xl p-3 text-center">
+                <p className="text-lg font-bold text-rose-700 dark:text-rose-300">{learnerDetail.missingSkills?.length || 0}</p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Skill Gaps</p>
+              </div>
+            </div>
+
+            {/* Personal Info */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-gray-50 dark:bg-slate-750 p-3.5 rounded-xl border border-gray-100 dark:border-slate-700">
+              {learnerDetail.careerGoal && (
+                <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                  <Target className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="font-medium">Goal:</span> {learnerDetail.careerGoal}
                 </div>
+              )}
+              {learnerDetail.location && (
+                <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                  <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="font-medium">Location:</span> {learnerDetail.location}
+                </div>
+              )}
+              {learnerDetail.phone && (
+                <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                  <Phone className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="font-medium">Phone:</span> {learnerDetail.phone}
+                </div>
+              )}
+              {learnerDetail.joinedAt && (
+                <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                  <Clock className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="font-medium">Joined:</span> {new Date(learnerDetail.joinedAt).toLocaleDateString()}
+                </div>
+              )}
+            </div>
 
-                {/* Profile Info */}
-                <div className="p-6 space-y-6">
-                  {/* Quick Stats */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
-                      <p className="text-xl font-semibold text-indigo-700 dark:text-indigo-300 dark:text-indigo-300 dark:text-indigo-400">{learnerDetail.readiness}%</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Readiness</p>
-                    </div>
-                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
-                      <p className="text-xl font-semibold text-green-600">{learnerDetail.completed}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Completed</p>
-                    </div>
-                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
-                      <p className="text-xl font-semibold text-yellow-600">{learnerDetail.inProgress}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">In Progress</p>
-                    </div>
-                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
-                      <p className="text-xl font-semibold text-red-600">{learnerDetail.missingSkills?.length || 0}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Skill Gaps</p>
-                    </div>
-                  </div>
-
-                  {/* Personal Info */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {learnerDetail.careerGoal && (
-                      <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <Target className="w-4 h-4 text-gray-400" />
-                        <span className="font-medium">Goal:</span> {learnerDetail.careerGoal}
-                      </div>
-                    )}
-                    {learnerDetail.location && (
-                      <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <MapPin className="w-4 h-4 text-gray-400" />
-                        <span className="font-medium">Location:</span> {learnerDetail.location}
-                      </div>
-                    )}
-                    {learnerDetail.phone && (
-                      <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <Phone className="w-4 h-4 text-gray-400" />
-                        <span className="font-medium">Phone:</span> {learnerDetail.phone}
-                      </div>
-                    )}
-                    {learnerDetail.joinedAt && (
-                      <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <Clock className="w-4 h-4 text-gray-400" />
-                        <span className="font-medium">Joined:</span> {new Date(learnerDetail.joinedAt).toLocaleDateString()}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Learning Path */}
-                  {learnerDetail.learningPath && (
-                    <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                        <BookOpen className="w-4 h-4" />
-                        {learnerDetail.learningPath.title}
-                      </h3>
-                      {learnerDetail.learningPath.stages?.map((stage, si) => (
-                        <div key={si} className="mb-4">
-                          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">{stage.stageName}</p>
-                          <div className="space-y-2">
-                            {stage.courses.map((course, ci) => (
-                              <div key={ci} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                                <div className="flex-1 mr-4">
-                                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{course.title}</p>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">{course.status}</p>
-                                </div>
-                                <div className="w-32">
-                                  <ProgressBar
-                                    value={course.progress}
-                                    showPercentage={true}
-                                    variant={course.progress === 100 ? "success" : course.progress > 0 ? "default" : "danger"}
-                                    size="sm"
-                                  />
-                                </div>
-                              </div>
-                            ))}
+            {/* Learning Path */}
+            {learnerDetail.learningPath && (
+              <div>
+                <h4 className="text-xs font-bold text-gray-800 dark:text-gray-200 mb-2 uppercase tracking-wider flex items-center gap-1.5">
+                  <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
+                  {learnerDetail.learningPath.title}
+                </h4>
+                {learnerDetail.learningPath.stages?.map((stage, si) => (
+                  <div key={si} className="mb-3 space-y-1.5">
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">{stage.stageName}</p>
+                    <div className="space-y-1.5">
+                      {stage.courses.map((course, ci) => (
+                        <div key={ci} className="flex items-center justify-between bg-gray-50 dark:bg-slate-700/40 rounded-lg p-2.5 border border-gray-100 dark:border-slate-700">
+                          <div className="flex-1 mr-4">
+                            <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{course.title}</p>
+                            <p className="text-[10px] text-gray-500 dark:text-gray-400">{course.status}</p>
+                          </div>
+                          <div className="w-28">
+                            <ProgressBar
+                              value={course.progress}
+                              showPercentage={true}
+                              variant={course.progress === 100 ? "success" : course.progress > 0 ? "default" : "danger"}
+                              size="sm"
+                            />
                           </div>
                         </div>
                       ))}
                     </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Skills */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div>
+                <h4 className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-1.5 uppercase tracking-wider">
+                  Acquired Skills
+                </h4>
+                <div className="flex flex-wrap gap-1">
+                  {learnerDetail.acquiredSkills?.length > 0 ? learnerDetail.acquiredSkills.map((s, i) => (
+                    <span key={i} className="px-2 py-0.5 text-[11px] font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 rounded border border-emerald-200 dark:border-emerald-800">
+                      {s}
+                    </span>
+                  )) : (
+                    <span className="text-xs text-gray-400">No skills acquired yet</span>
                   )}
-
-                  {/* Skills */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">✅ Acquired Skills</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {learnerDetail.acquiredSkills?.length > 0 ? learnerDetail.acquiredSkills.map((s, i) => (
-                          <span key={i} className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 dark:text-green-400 rounded">{s}</span>
-                        )) : (
-                          <span className="text-xs text-gray-400">No skills acquired yet</span>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">⚠️ Missing Skills</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {learnerDetail.missingSkills?.length > 0 ? learnerDetail.missingSkills.map((s, i) => (
-                          <span key={i} className="px-2 py-1 text-xs bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 dark:text-red-400 rounded">{s}</span>
-                        )) : (
-                          <span className="text-xs text-gray-400">All skills acquired!</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Send Notification from modal */}
-                  <div className="pt-4 border-t border-gray-200 dark:border-slate-700">
-                    <button
-                      onClick={() => handleSendNotification(learnerDetail._id, learnerDetail.name)}
-                      disabled={sendingTo === learnerDetail._id}
-                      className="w-full px-4 py-2.5 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                      <Mail className="w-4 h-4" />
-                      {sendingTo === learnerDetail._id ? 'Sending...' : 'Send Notification to Learner'}
-                    </button>
-                  </div>
                 </div>
               </div>
-            ) : (
-              <div className="p-12 text-center text-gray-500 dark:text-gray-400">Failed to load learner details.</div>
-            )}
+              <div>
+                <h4 className="text-xs font-bold text-rose-700 dark:text-rose-400 mb-1.5 uppercase tracking-wider">
+                  Missing Skills
+                </h4>
+                <div className="flex flex-wrap gap-1">
+                  {learnerDetail.missingSkills?.length > 0 ? learnerDetail.missingSkills.map((s, i) => (
+                    <span key={i} className="px-2 py-0.5 text-[11px] font-medium bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 rounded border border-rose-200 dark:border-rose-800">
+                      {s}
+                    </span>
+                  )) : (
+                    <span className="text-xs text-gray-400">All skills acquired!</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Action inside modal */}
+            <div className="pt-3 border-t border-gray-200 dark:border-slate-700 flex justify-end gap-2">
+              <Button
+                variant="secondary"
+                onClick={closeDetailModal}
+              >
+                Close
+              </Button>
+              <Button
+                variant="primary"
+                icon={Mail}
+                onClick={() => {
+                  closeDetailModal();
+                  handleOpenNotificationModal(learnerDetail._id, learnerDetail.name);
+                }}
+              >
+                Send Recommendation
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="p-8 text-center text-sm text-gray-400">Failed to load learner details.</div>
+        )}
+      </Modal>
     </div>
   );
 }
+
+

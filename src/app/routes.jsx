@@ -10,7 +10,6 @@ import CounselorDashboard from "./pages/CounselorDashboard";
 import TrainerDashboard from "./pages/TrainerDashboard";
 import Settings from "./pages/Settings";
 import ProtectedRoute from "./components/ProtectedRoute";
-import DemoNavbar from "../components/ui/demo-navbar";
 
 export const router = createBrowserRouter([
   {
@@ -21,10 +20,7 @@ export const router = createBrowserRouter([
     path: "/login",
     Component: Login,
   },
-  {
-    path: "/demo-navbar",
-    Component: DemoNavbar,
-  },
+
   {
     path: "/dashboard",
     Component: DashboardLayout,

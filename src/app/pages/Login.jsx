@@ -4,6 +4,10 @@ import { GraduationCap, Mail, Lock, Eye, EyeOff, User, ArrowLeft, Sun, Moon } fr
 import { useTheme } from "../contexts/ThemeContext";
 import { useGoogleLogin } from "@react-oauth/google";
 import { AuroraOverlay } from "../components/ui/aurora-overlay";
+import { Button } from "../components/ui/Button";
+import { ThemeToggle } from "../components/ui/ThemeToggle";
+import { getApiUrl } from "../config/api";
+
 
 export default function Login() {
   const navigate = useNavigate();
@@ -16,6 +20,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,11 +31,13 @@ export default function Login() {
       return;
     }
 
+    setSubmitting(true);
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
       const body = isLogin ? { email, password } : { name, email, password };
+
       
-      const res = await fetch(`http://localhost:5000${endpoint}`, {
+      const res = await fetch(getApiUrl(endpoint), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -56,14 +63,17 @@ export default function Login() {
       }
     } catch (err) {
       setError('Network error, please try again');
+    } finally {
+      setSubmitting(false);
     }
   };
+
 
   const handleGoogleSuccess = async (tokenResponse) => {
     try {
       const { access_token } = tokenResponse;
       // We pass the currently selected role in case this is a new signup via Google
-      const res = await fetch(`http://localhost:5000/api/auth/google`, {
+      const res = await fetch(getApiUrl('/api/auth/google'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ access_token })
@@ -104,20 +114,15 @@ export default function Login() {
         <div className="mb-8 flex items-center justify-between">
           <button
             onClick={() => navigate('/')}
-            className="flex items-center text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors duration-200"
+            className="flex items-center text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </button>
           
-          <button 
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="p-2 hover:bg-white dark:hover:bg-slate-800 rounded-lg text-gray-500 dark:text-gray-400 shadow-sm border border-gray-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 transition-colors"
-            title="Toggle Theme"
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-indigo-400" /> : <Moon className="w-4 h-4 text-gray-500" />}
-          </button>
+          <ThemeToggle variant="icon" />
         </div>
+
 
         {/* Logo & Title */}
         <div className="text-center mb-8">
@@ -232,12 +237,16 @@ export default function Login() {
             )}
 
             {/* Submit Button */}
-            <button
+            <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-indigo-600 hover:to-purple-700 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
+              variant="primary"
+              loading={submitting}
+              loadingText={isLogin ? "Signing In..." : "Creating Account..."}
+              className="w-full justify-center !py-3 !text-base shadow-md hover:shadow-indigo-500/25"
             >
               {isLogin ? "Sign In" : "Create Account"}
-            </button>
+            </Button>
+
 
             {/* Divider */}
             <div className="relative flex items-center py-2">

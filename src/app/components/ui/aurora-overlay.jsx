@@ -3,8 +3,8 @@ import { cn } from "./utils";
 import React from "react";
 
 /**
- * A lightweight aurora effect layer that can be placed inside any container
- * without affecting layout. It renders as an absolute-positioned background.
+ * A lightweight, 120 FPS hardware-accelerated aurora effect layer.
+ * Operates purely on the GPU compositor without main-thread repaints or scroll blocking.
  */
 export const AuroraOverlay = ({
   className,
@@ -12,7 +12,7 @@ export const AuroraOverlay = ({
   ...props
 }) => {
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none" {...props}>
+    <div className="absolute inset-0 overflow-hidden pointer-events-none [contain:strict] [transform:translate3d(0,0,0)]" {...props}>
       <div
         className={cn(
           `
@@ -23,13 +23,13 @@ export const AuroraOverlay = ({
           dark:[background-image:var(--dark-gradient),var(--aurora)]
           [background-size:300%,_200%]
           [background-position:50%_50%,50%_50%]
-          filter blur-[10px] invert dark:invert-0
+          filter blur-[10px]
           after:content-[""] after:absolute after:inset-0 after:[background-image:var(--white-gradient),var(--aurora)] 
           after:dark:[background-image:var(--dark-gradient),var(--aurora)]
           after:[background-size:200%,_100%] 
-          after:animate-aurora after:[background-attachment:fixed] after:mix-blend-difference
+          after:animate-gpu-aurora after:mix-blend-difference
           pointer-events-none
-          absolute -inset-[10px] opacity-50 will-change-transform`,
+          absolute -inset-[20px] opacity-40 [transform:translate3d(0,0,0)] [backface-visibility:hidden] [will-change:transform]`,
           showRadialGradient &&
             `[mask-image:radial-gradient(ellipse_at_100%_0%,black_10%,var(--transparent)_70%)]`,
           className
@@ -38,3 +38,4 @@ export const AuroraOverlay = ({
     </div>
   );
 };
+

@@ -3,6 +3,8 @@ import { DashboardCard } from "../components/DashboardCard";
 import { AlertTriangle, Clock, TrendingDown, AlertCircle, Info, CheckCircle2 } from "lucide-react";
 
 import { useFetch, apiCall } from "../hooks/useFetch";
+import { useToast } from "../contexts/ToastContext";
+import { Skeleton, SkeletonMetrics, SkeletonList } from "../components/ui/Skeleton";
 
 const riskIndicators = [
   { metric: "Attendance", value: 85, status: "good", trend: "up" },
@@ -14,6 +16,7 @@ const riskIndicators = [
 export default function Alerts() {
   const { data: fetchedNotifications, loading } = useFetch('/api/notifications');
   const [notifications, setNotifications] = useState(null);
+  const toast = useToast();
 
   // Sync fetched data into local state once
   useEffect(() => {
@@ -29,18 +32,32 @@ export default function Alerts() {
       setNotifications(prev =>
         prev.map(n => n._id === id ? { ...n, read: true } : n)
       );
+      toast.success("Notification marked as read");
     } catch (err) {
       console.error(err);
+      toast.error("Failed to mark notification as read");
     }
   };
 
-  if (loading) return <div className="p-6 text-center text-gray-500 dark:text-gray-400">Loading alerts...</div>;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-60" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+        <SkeletonMetrics count={4} />
+        <SkeletonList rows={5} />
+      </div>
+    );
+  }
+
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Alerts & Notifications</h1>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Alerts & Notifications</h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">Early warning system to keep you on track</p>
       </div>
 
@@ -51,7 +68,7 @@ export default function Alerts() {
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">{indicator.metric}</p>
               <div className="flex items-end gap-2 mt-2">
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{indicator.value}%</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{indicator.value}%</p>
                 <div className={`flex items-center gap-1 mb-1 ${
                   indicator.status === "good" ? "text-green-600" : "text-yellow-600"
                 }`}>
@@ -89,7 +106,7 @@ export default function Alerts() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-1">
-                      <h4 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                         {alert.title} 
                         {alert.read && <span className="text-xs font-normal text-gray-500 dark:text-gray-400">(Read)</span>}
                       </h4>
@@ -118,12 +135,12 @@ export default function Alerts() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <DashboardCard title="Immediate Actions">
           <div className="space-y-2">
-            <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg border border-red-200">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Complete overdue assignment</p>
+            <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg border border-red-200 dark:border-red-800">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Complete overdue assignment</p>
               <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Due 2 days ago</p>
             </div>
-            <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg border border-yellow-200">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Review TypeScript basics</p>
+            <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Review TypeScript basics</p>
               <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Assessment score below target</p>
             </div>
           </div>
@@ -131,12 +148,12 @@ export default function Alerts() {
 
         <DashboardCard title="This Week">
           <div className="space-y-2">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg border border-blue-200">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Complete 3 pending modules</p>
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Complete 3 pending modules</p>
               <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">To stay on track</p>
             </div>
-            <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg border border-indigo-200">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Take skill assessment</p>
+            <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg border border-indigo-200 dark:border-indigo-800">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Take skill assessment</p>
               <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Validate your progress</p>
             </div>
           </div>
@@ -144,12 +161,12 @@ export default function Alerts() {
 
         <DashboardCard title="Recommendations">
           <div className="space-y-2">
-            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg border border-purple-200">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Join study group</p>
+            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg border border-purple-200 dark:border-purple-800">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Join study group</p>
               <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Improve engagement</p>
             </div>
-            <div className="p-3 bg-teal-100 dark:bg-teal-900/30 rounded-lg border border-teal-200">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Schedule counselor session</p>
+            <div className="p-3 bg-teal-100 dark:bg-teal-900/30 rounded-lg border border-teal-200 dark:border-teal-800">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Schedule counselor session</p>
               <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Get personalized guidance</p>
             </div>
           </div>

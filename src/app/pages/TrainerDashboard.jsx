@@ -1,26 +1,36 @@
 import { useState, useEffect } from "react";
 import { DashboardCard } from "../components/DashboardCard";
 import { ProgressBar } from "../components/ProgressBar";
-import { BookOpen, Users, TrendingDown, Award, Activity, CheckCircle, ChevronDown, ChevronUp, Search, X, Map, BarChart3 } from "lucide-react";
+import { BookOpen, Users, TrendingDown, Award, Activity, CheckCircle, ChevronDown, ChevronUp, Search, X, Map, BarChart3, Send } from "lucide-react";
 import {
   BarChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from "recharts";
 
 import { useFetch, apiCall } from "../hooks/useFetch";
+import { getApiUrl } from "../config/api";
+import { useToast } from "../contexts/ToastContext";
+import { Button } from "../components/ui/Button";
+import { Modal } from "../components/ui/Modal";
+import { Skeleton, SkeletonMetrics, SkeletonChart, SkeletonList, SkeletonCourse } from "../components/ui/Skeleton";
+import { AccordionContent } from "../components/ui/AccordionContent";
+
 
 export default function TrainerDashboard() {
   const { data: dashboardData, loading } = useFetch('/api/trainer/dashboard');
+  const toast = useToast();
   const [coursesData, setCoursesData] = useState([]);
   const [studentsData, setStudentsData] = useState([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [loadingStudents, setLoadingStudents] = useState(true);
-  const [sendingTo, setSendingTo] = useState(null);
   const [expandedUser, setExpandedUser] = useState(null);
   const [search, setSearch] = useState("");
   const [courseSearch, setCourseSearch] = useState("");
   const [showAllUsers, setShowAllUsers] = useState(false);
   const [showAllCourses, setShowAllCourses] = useState(false);
+
+  // Send message modal state
+  const [messageModal, setMessageModal] = useState({ open: false, learner: null, message: '', sending: false });
 
   // Analytics modal state
   const [analyticsModal, setAnalyticsModal] = useState(null);
@@ -37,11 +47,11 @@ export default function TrainerDashboard() {
         const headers = { 'Authorization': `Bearer ${token}` };
         
         // Fetch courses
-        const coursesRes = await fetch('http://localhost:5000/api/trainer/courses', { headers });
+        const coursesRes = await fetch(getApiUrl('/api/trainer/courses'), { headers });
         if (coursesRes.ok) setCoursesData(await coursesRes.json());
         
         // Fetch students
-        const studentsRes = await fetch('http://localhost:5000/api/trainer/students', { headers });
+        const studentsRes = await fetch(getApiUrl('/api/trainer/students'), { headers });
         if (studentsRes.ok) setStudentsData(await studentsRes.json());
         
       } catch (e) {
@@ -54,36 +64,51 @@ export default function TrainerDashboard() {
     fetchTrainerData();
   }, []);
 
-  if (loading) return <div className="p-6 text-center text-gray-500 dark:text-gray-400">Loading trainer stats...</div>;
+  const handleOpenAlertModal = (learner) => {
+    if (!learner._id) {
+      toast.error('Cannot send notification: learner ID unavailable');
+      return;
+    }
+    setMessageModal({ open: true, learner, message: '', sending: false });
+  };
+
+  const handleSendMessageSubmit = async (e) => {
+    e.preventDefault();
+    if (!messageModal.learner?._id || !messageModal.message.trim()) return;
+    setMessageModal(prev => ({ ...prev, sending: true }));
+    try {
+      await apiCall('/api/notifications/send', 'POST', {
+        userId: messageModal.learner._id,
+        title: 'Trainer Alert',
+        message: messageModal.message.trim(),
+        type: 'trainer',
+      });
+      toast.success(`Alert sent to ${messageModal.learner.name}!`);
+      setMessageModal({ open: false, learner: null, message: '', sending: false });
+    } catch (err) {
+      toast.error('Failed to send alert');
+      setMessageModal(prev => ({ ...prev, sending: false }));
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-60" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+        <SkeletonMetrics count={4} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SkeletonChart height="h-72" />
+          <SkeletonChart height="h-72" />
+        </div>
+      </div>
+    );
+  }
 
   const courseStats = dashboardData?.courseStats || [];
   const performanceData = dashboardData?.performanceData || [];
-
-  // ── Direct notification sending using learner _id ──────────────────
-  const handleSendAlert = async (learner, idx) => {
-    const message = window.prompt(`Send an alert to ${learner.name}:`);
-    if (!message) return;
-
-    if (!learner._id) {
-      alert('Cannot send notification: learner ID unavailable');
-      return;
-    }
-
-    setSendingTo(idx);
-    try {
-      await apiCall('/api/notifications/send', 'POST', {
-        userId: learner._id,
-        title: 'Trainer Alert',
-        message,
-        type: 'trainer',
-      });
-      alert(`Alert sent to ${learner.name}!`);
-    } catch (err) {
-      alert('Failed to send alert');
-    } finally {
-      setSendingTo(null);
-    }
-  };
 
   // ── Fetch course analytics ──────────────────────────────────────────
   const handleViewAnalytics = async (courseId, courseName) => {
@@ -98,6 +123,7 @@ export default function TrainerDashboard() {
       setAnalyticsLoading(false);
     }
   };
+
 
   // ── Fetch learner learning path ───────────────────────────────────
   const handleViewPath = async (userId, learnerName) => {
@@ -336,9 +362,9 @@ export default function TrainerDashboard() {
           {loadingStudents ? (
             <p className="text-sm text-gray-400 text-center py-8">Loading learners...</p>
           ) : visibleUsers.length > 0 ? visibleUsers.map((learner) => (
-            <div key={learner._id} className="p-4 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg">
+            <div key={learner._id} className="p-4 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg hover:border-indigo-300 dark:hover:border-slate-600 transition-all">
               <div 
-                className="flex items-start justify-between cursor-pointer"
+                className="flex items-start justify-between cursor-pointer select-none active:scale-[0.99] transition-transform duration-100"
                 onClick={() => setExpandedUser(expandedUser === learner._id ? null : learner._id)}
               >
                 <div>
@@ -360,20 +386,22 @@ export default function TrainerDashboard() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    icon={Send}
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleSendAlert(learner, learner._id);
+                      handleOpenAlertModal(learner);
                     }}
-                    disabled={sendingTo === learner._id}
-                    className="px-3 py-1.5 text-sm font-medium bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:bg-slate-800 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 disabled:opacity-50"
                   >
-                    {sendingTo === learner._id ? 'Sending...' : 'Message'}
-                  </button>
+                    Message
+                  </Button>
                 </div>
               </div>
-              
-              {expandedUser === learner._id && (
+
+              {/* ── Expandable Learner Courses with smooth in/out animation ── */}
+              <AccordionContent isOpen={expandedUser === learner._id}>
                 <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700 space-y-4 cursor-default" onClick={e => e.stopPropagation()}>
                   {learner.courses.map((course, cIdx) => (
                     <div key={cIdx} className="pl-11">
@@ -392,16 +420,17 @@ export default function TrainerDashboard() {
                   <div className="pl-11 pt-2">
                     <button
                       onClick={() => handleViewPath(learner._id, learner.name)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-700 dark:text-indigo-300 dark:text-indigo-300 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/30 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 dark:border-indigo-800 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-700 dark:text-indigo-300 dark:text-indigo-300 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/30 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 dark:border-indigo-800 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/40 active:scale-95 transition-all"
                     >
                       <Map className="w-3.5 h-3.5" />
                       View Learning Path
                     </button>
                   </div>
                 </div>
-              )}
+              </AccordionContent>
             </div>
           )) : (
+
             <p className="text-sm text-gray-400 text-center py-8">
               {search ? "No learners or courses found matching your search." : "No learners currently enrolled in your courses."}
             </p>
@@ -461,215 +490,237 @@ export default function TrainerDashboard() {
         </div>
       </DashboardCard>
 
-      {/* ═══ Course Analytics Modal ═══════════════════════════════════ */}
-      {analyticsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setAnalyticsModal(null)}>
-          <div className="bg-gray-50 dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-slate-700">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/40 rounded-lg flex items-center justify-center">
-                  <BarChart3 className="w-5 h-5 text-indigo-700 dark:text-indigo-300 dark:text-indigo-300 dark:text-indigo-400" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Course Analytics</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{analyticsModal.courseName}</p>
-                </div>
-              </div>
-              <button onClick={() => setAnalyticsModal(null)} className="p-1.5 rounded-lg hover:bg-gray-50 dark:bg-slate-800 dark:hover:bg-gray-700 transition-colors">
-                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              </button>
-            </div>
+      {/* ═══ Send Message Modal ═════════════════════════════════════ */}
+      <Modal
+        isOpen={messageModal.open}
+        onClose={() => setMessageModal({ open: false, learner: null, message: '', sending: false })}
+        title="Send Trainer Alert"
+        subtitle={`Message to ${messageModal.learner?.name || 'Learner'}`}
+      >
+        <form onSubmit={handleSendMessageSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider">
+              Alert / Recommendation Message
+            </label>
+            <textarea
+              required
+              rows={4}
+              value={messageModal.message}
+              onChange={(e) => setMessageModal(prev => ({ ...prev, message: e.target.value }))}
+              placeholder="e.g. Great progress on module 2! Keep going with practical assignments..."
+              className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all resize-none"
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="secondary"
+              onClick={() => setMessageModal({ open: false, learner: null, message: '', sending: false })}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              loading={messageModal.sending}
+              loadingText="Sending..."
+              icon={Send}
+            >
+              Send Alert
+            </Button>
+          </div>
+        </form>
+      </Modal>
 
-            {/* Body */}
-            <div className="p-5">
-              {analyticsModal.loading ? (
-                <p className="text-sm text-gray-400 text-center py-8">Loading analytics...</p>
-              ) : analyticsModal.error ? (
-                <p className="text-sm text-red-400 text-center py-8">Failed to load analytics data.</p>
-              ) : (
-                <>
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 gap-3 mb-5">
-                    <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 dark:bg-indigo-900/20 rounded-lg text-center">
-                      <p className="text-xl font-semibold text-indigo-700 dark:text-indigo-300 dark:text-indigo-300 dark:text-indigo-400">{analyticsModal.totalStudents}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total Students</p>
-                    </div>
-                    <div className="p-3 bg-green-100 dark:bg-green-900/30 dark:bg-green-900/20 rounded-lg text-center">
-                      <p className="text-xl font-semibold text-green-700 dark:text-green-300 dark:text-green-300 dark:text-green-400">{analyticsModal.completionRate}%</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Completion Rate</p>
-                    </div>
-                    <div className="p-3 bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/20 rounded-lg text-center">
-                      <p className="text-xl font-semibold text-purple-700 dark:text-purple-300 dark:text-purple-300 dark:text-purple-400">{analyticsModal.avgProgress}%</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Avg Progress</p>
-                    </div>
-                    <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 dark:bg-yellow-900/20 rounded-lg text-center">
-                      <p className="text-xl font-semibold text-yellow-700 dark:text-yellow-300 dark:text-yellow-300 dark:text-yellow-400">{analyticsModal.inProgressCount}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">In Progress</p>
+      {/* ═══ Course Analytics Modal ═══════════════════════════════════ */}
+      <Modal
+        isOpen={Boolean(analyticsModal)}
+        onClose={() => setAnalyticsModal(null)}
+        title="Course Analytics"
+        subtitle={analyticsModal?.courseName}
+      >
+        {analyticsModal && (
+          <div className="space-y-4">
+            {analyticsModal.loading ? (
+              <div className="space-y-3 py-6">
+                <Skeleton className="h-6 w-48 mx-auto" />
+                <SkeletonMetrics count={4} />
+              </div>
+            ) : analyticsModal.error ? (
+              <p className="text-sm text-rose-500 text-center py-6">Failed to load analytics data.</p>
+            ) : (
+              <>
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl text-center border border-indigo-100 dark:border-indigo-900/40">
+                    <p className="text-lg font-bold text-indigo-700 dark:text-indigo-300">{analyticsModal.totalStudents}</p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Enrolled</p>
+                  </div>
+                  <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl text-center border border-emerald-100 dark:border-emerald-900/40">
+                    <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300">{analyticsModal.completionRate}%</p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Completed</p>
+                  </div>
+                  <div className="p-3 bg-purple-50 dark:bg-purple-950/40 rounded-xl text-center border border-purple-100 dark:border-purple-900/40">
+                    <p className="text-lg font-bold text-purple-700 dark:text-purple-300">{analyticsModal.avgProgress}%</p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Avg Progress</p>
+                  </div>
+                  <div className="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-xl text-center border border-amber-100 dark:border-amber-900/40">
+                    <p className="text-lg font-bold text-amber-700 dark:text-amber-300">{analyticsModal.inProgressCount}</p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">In Progress</p>
+                  </div>
+                </div>
+
+                {/* Meta */}
+                {(analyticsModal.domain || analyticsModal.level) && (
+                  <div className="flex gap-2 pt-1">
+                    {analyticsModal.domain && (
+                      <span className="px-2.5 py-0.5 text-xs font-medium bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-full">{analyticsModal.domain}</span>
+                    )}
+                    {analyticsModal.level && (
+                      <span className="px-2.5 py-0.5 text-xs font-medium bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-full">{analyticsModal.level}</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Student Breakdown */}
+                {analyticsModal.students?.length > 0 && (
+                  <div className="pt-2">
+                    <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Student Breakdown</h4>
+                    <div className="space-y-2 max-h-48 overflow-y-auto divide-y divide-gray-100 dark:divide-slate-700/60 pr-1">
+                      {analyticsModal.students.map((s, i) => (
+                        <div key={i} className="flex items-center justify-between py-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                              <span className="text-white text-[10px] font-bold">{s.name?.charAt(0)?.toUpperCase() || 'U'}</span>
+                            </div>
+                            <span className="text-xs font-medium text-gray-900 dark:text-gray-100">{s.name}</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="w-20">
+                              <ProgressBar value={s.progress} size="sm" showPercentage={false}
+                                variant={s.progress >= 75 ? "success" : s.progress >= 40 ? "default" : "warning"}
+                              />
+                            </div>
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                              s.status === 'Completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                              : s.status === 'In Progress' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                              : 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400'
+                            }`}>{s.status}</span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
+                )}
 
-                  {/* Meta */}
-                  {(analyticsModal.domain || analyticsModal.level) && (
-                    <div className="flex gap-2 mb-4">
-                      {analyticsModal.domain && (
-                        <span className="px-2.5 py-1 text-xs font-medium bg-gray-50 dark:bg-slate-800 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">{analyticsModal.domain}</span>
-                      )}
-                      {analyticsModal.level && (
-                        <span className="px-2.5 py-1 text-xs font-medium bg-gray-50 dark:bg-slate-800 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">{analyticsModal.level}</span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Student Breakdown */}
-                  {analyticsModal.students?.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Student Breakdown</h4>
-                      <div className="space-y-2 max-h-48 overflow-y-auto">
-                        {analyticsModal.students.map((s, i) => (
-                          <div key={i} className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                                <span className="text-white text-[10px] font-medium">{s.name?.charAt(0)?.toUpperCase() || 'U'}</span>
-                              </div>
-                              <span className="text-sm text-gray-900 dark:text-gray-100">{s.name}</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <div className="w-24">
-                                <ProgressBar value={s.progress} size="sm" showPercentage={false}
-                                  variant={s.progress >= 75 ? "success" : s.progress >= 40 ? "default" : "warning"}
-                                />
-                              </div>
-                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                                s.status === 'Completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-400'
-                                : s.status === 'In Progress' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-400'
-                                : 'bg-gray-50 dark:bg-slate-800 dark:bg-gray-600 text-gray-500 dark:text-gray-400'
-                              }`}>{s.status}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {analyticsModal.totalStudents === 0 && (
-                    <p className="text-sm text-gray-400 text-center py-4">No students enrolled in this course yet.</p>
-                  )}
-                </>
-              )}
-            </div>
+                {analyticsModal.totalStudents === 0 && (
+                  <p className="text-xs text-gray-400 text-center py-4">No students enrolled in this course yet.</p>
+                )}
+              </>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
 
       {/* ═══ Learning Path Modal ══════════════════════════════════════ */}
-      {pathModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setPathModal(null)}>
-          <div className="bg-gray-50 dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-slate-700">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-teal-100 dark:bg-teal-900/40 rounded-lg flex items-center justify-center">
-                  <Map className="w-5 h-5 text-teal-700 dark:text-teal-300 dark:text-teal-300 dark:text-teal-400" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{pathModal.learnerName}'s Learning Path</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{pathModal.goal || pathModal.title || ''}</p>
-                </div>
+      <Modal
+        isOpen={Boolean(pathModal)}
+        onClose={() => setPathModal(null)}
+        title={`${pathModal?.learnerName}'s Learning Path`}
+        subtitle={pathModal?.goal || pathModal?.title || ''}
+      >
+        {pathModal && (
+          <div className="space-y-4">
+            {pathModal.loading ? (
+              <div className="space-y-3 py-6">
+                <Skeleton className="h-6 w-48 mx-auto" />
+                <SkeletonCourse count={2} />
               </div>
-              <button onClick={() => setPathModal(null)} className="p-1.5 rounded-lg hover:bg-gray-50 dark:bg-slate-800 dark:hover:bg-gray-700 transition-colors">
-                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              </button>
-            </div>
+            ) : pathModal.error ? (
+              <p className="text-sm text-rose-500 text-center py-6">Failed to load learning path data.</p>
+            ) : (
+              <>
+                {/* Path info badges */}
+                <div className="flex flex-wrap gap-2">
+                  {pathModal.hasPath ? (
+                    <span className="px-2.5 py-0.5 text-xs font-semibold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 rounded-full border border-teal-200 dark:border-teal-800">
+                      AI Generated Path
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-0.5 text-xs font-medium bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400 rounded-full">
+                      Standard Curriculum
+                    </span>
+                  )}
+                  {pathModal.level && (
+                    <span className="px-2.5 py-0.5 text-xs font-medium bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 rounded-full border border-purple-200 dark:border-purple-800">
+                      {pathModal.level}
+                    </span>
+                  )}
+                </div>
 
-            {/* Body */}
-            <div className="p-5">
-              {pathModal.loading ? (
-                <p className="text-sm text-gray-400 text-center py-8">Loading learning path...</p>
-              ) : pathModal.error ? (
-                <p className="text-sm text-red-400 text-center py-8">Failed to load learning path data.</p>
-              ) : (
-                <>
-                  {/* Path info badges */}
-                  <div className="flex flex-wrap gap-2 mb-5">
-                    {pathModal.hasPath && (
-                      <span className="px-2.5 py-1 text-xs font-medium bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 dark:text-teal-400 rounded-full">AI Generated Path</span>
-                    )}
-                    {!pathModal.hasPath && (
-                      <span className="px-2.5 py-1 text-xs font-medium bg-gray-50 dark:bg-slate-800 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full">No Generated Path</span>
-                    )}
-                    {pathModal.level && (
-                      <span className="px-2.5 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 dark:text-purple-400 rounded-full">{pathModal.level}</span>
-                    )}
+                {/* Stages */}
+                {pathModal.stages?.length > 0 && pathModal.stages.map((stage, sIdx) => (
+                  <div key={sIdx} className="space-y-2 pt-2">
+                    <h4 className="text-xs font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2 uppercase tracking-wider">
+                      <span className="w-4 h-4 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-full flex items-center justify-center text-[10px]">
+                        {sIdx + 1}
+                      </span>
+                      {stage.stageName}
+                    </h4>
+                    <div className="space-y-2 pl-6">
+                      {stage.courses.map((c, cIdx) => (
+                        <div key={cIdx} className="p-3 bg-gray-50 dark:bg-slate-700/40 rounded-xl border border-gray-100 dark:border-slate-700">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs font-medium text-gray-900 dark:text-gray-100">{c.title}</span>
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                              c.status === 'Completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                              : c.status === 'In Progress' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                              : 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400'
+                            }`}>{c.status}</span>
+                          </div>
+                          <ProgressBar
+                            value={c.progress}
+                            size="sm"
+                            showPercentage={true}
+                            variant={c.progress >= 75 ? "success" : c.progress >= 40 ? "default" : "warning"}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
+                ))}
 
-                  {/* Stages */}
-                  {pathModal.stages?.length > 0 && pathModal.stages.map((stage, sIdx) => (
-                    <div key={sIdx} className="mb-5">
-                      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                        <span className="w-5 h-5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 dark:text-indigo-300 dark:text-indigo-400 rounded-full flex items-center justify-center text-[10px] font-semibold">{sIdx + 1}</span>
-                        {stage.stageName}
-                      </h4>
-                      <div className="space-y-2 pl-7">
-                        {stage.courses.map((c, cIdx) => (
-                          <div key={cIdx} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                            <div className="flex items-center justify-between mb-1.5">
-                              <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{c.title}</span>
-                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                                c.status === 'Completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-400'
-                                : c.status === 'In Progress' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-400'
-                                : 'bg-gray-50 dark:bg-slate-800 dark:bg-gray-600 text-gray-500 dark:text-gray-400'
-                              }`}>{c.status}</span>
-                            </div>
-                            <ProgressBar
-                              value={c.progress}
-                              size="sm"
-                              showPercentage={true}
-                              variant={c.progress >= 75 ? "success" : c.progress >= 40 ? "default" : "warning"}
-                            />
+                {/* Flat courses list */}
+                {pathModal.courses?.length > 0 && (
+                  <div className="space-y-2 pt-2">
+                    <h4 className="text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">Enrolled Courses</h4>
+                    <div className="space-y-2">
+                      {pathModal.courses.map((c, cIdx) => (
+                        <div key={cIdx} className="p-3 bg-gray-50 dark:bg-slate-700/40 rounded-xl border border-gray-100 dark:border-slate-700">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs font-medium text-gray-900 dark:text-gray-100">{c.title}</span>
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                              c.status === 'Completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                              : c.status === 'In Progress' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                              : 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400'
+                            }`}>{c.status}</span>
                           </div>
-                        ))}
-                      </div>
+                          <ProgressBar
+                            value={c.progress}
+                            size="sm"
+                            showPercentage={true}
+                            variant={c.progress >= 75 ? "success" : c.progress >= 40 ? "default" : "warning"}
+                          />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-
-                  {/* Flat courses list (no generated path) */}
-                  {pathModal.courses?.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Enrolled Courses</h4>
-                      <div className="space-y-2">
-                        {pathModal.courses.map((c, cIdx) => (
-                          <div key={cIdx} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                            <div className="flex items-center justify-between mb-1.5">
-                              <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{c.title}</span>
-                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                                c.status === 'Completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-400'
-                                : c.status === 'In Progress' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-400'
-                                : 'bg-gray-50 dark:bg-slate-800 dark:bg-gray-600 text-gray-500 dark:text-gray-400'
-                              }`}>{c.status}</span>
-                            </div>
-                            <ProgressBar
-                              value={c.progress}
-                              size="sm"
-                              showPercentage={true}
-                              variant={c.progress >= 75 ? "success" : c.progress >= 40 ? "default" : "warning"}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Empty state */}
-                  {(!pathModal.stages?.length && !pathModal.courses?.length) && (
-                    <p className="text-sm text-gray-400 text-center py-6">No learning path or enrolled courses found for this learner.</p>
-                  )}
-                </>
-              )}
-            </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   );
 }
+

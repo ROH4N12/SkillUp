@@ -25,12 +25,27 @@ import {
 } from "recharts";
 
 import { useFetch } from "../hooks/useFetch";
+import { Skeleton, SkeletonMetrics, SkeletonChart } from "../components/ui/Skeleton";
 
 export default function ProgressTracking() {
   const { data, loading } = useFetch('/api/learner/progress-stats');
   const { data: streakData } = useFetch('/api/activity/streak');
 
-  if (loading) return <div className="p-6 text-center text-gray-500 dark:text-gray-400">Loading progress data...</div>;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-52" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <SkeletonMetrics count={4} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SkeletonChart height="h-72" />
+          <SkeletonChart height="h-72" />
+        </div>
+      </div>
+    );
+  }
 
   const stats = data || {};
   const courseProgress = stats.courseProgress || [];
