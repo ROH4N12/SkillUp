@@ -1,40 +1,33 @@
 import mongoose from 'mongoose';
 
-let cached = global.mongoose;
-
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
-}
-
 const connectDB = async () => {
-  if (cached.conn) {
-    return cached.conn;
+  // If already connected, reuse connection
+  if (mongoose.connection.readyState >= 1) {
+    return mongoose.connection;
   }
 
-  const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/skillup';
+  const uri = process.env.MONGO_URI;
 
-  if (!cached.promise) {
-    const opts = {
-      bufferCommands: false,
-    };
-    cached.promise = mongoose.connect(uri, opts).then((mongooseInstance) => {
-      console.log(`MongoDB Connected: ${mongooseInstance.connection.host}`);
-      return mongooseInstance;
-    });
+  if (!uri) {
+    const errorMsg = 'MONGO_URI environment variable is not configured in Vercel. Please add your MongoDB Atlas connection string in Vercel Project Settings -> Environment Variables.';
+    console.error(errorMsg);
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(errorMsg);
+    }
+    // Fallback for local development
+    return mongoose.connect('mongodb://localhost:27017/skillup');
   }
 
   try {
-    cached.conn = await cached.promise;
+    const conn = await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 5000,
+    });
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    return conn;
   } catch (error) {
-    cached.promise = null;
     console.error(`MongoDB Connection Error: ${error.message}`);
-    // In standard node environments, log; in serverless, don't exit process
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn('Continuing without active MongoDB connection (fallback mode)');
-    }
+    throw new Error(`Database connection failed: ${error.message}`);
   }
-
-  return cached.conn;
 };
 
 export default connectDB;
