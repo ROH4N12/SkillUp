@@ -10,6 +10,7 @@ import videoRoutes from './routes/videos.js';
 import settingsRoutes from './routes/settings.js';
 import activityRoutes from './routes/activity.js';
 import connectDB from './config/db.js';
+import { autoSeedDatabase, engineeringCourses } from './config/seedDatabase.js';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use(async (req, res, next) => {
 
   try {
     await connectDB();
+    await autoSeedDatabase();
     next();
   } catch (err) {
     return res.status(500).json({ 
@@ -36,6 +38,16 @@ app.use(async (req, res, next) => {
 // Health check route
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Manual seed route
+app.post('/api/seed', async (req, res) => {
+  try {
+    await autoSeedDatabase();
+    res.json({ message: 'Database seeded successfully', coursesCount: engineeringCourses.length });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 app.use('/api/auth', authRoutes);
