@@ -101,6 +101,39 @@ export default function Login() {
     }
   };
 
+  const [demoRoleLoading, setDemoRoleLoading] = useState(null);
+
+  const handleDemoLogin = async (role) => {
+    try {
+      setDemoRoleLoading(role);
+      setError("");
+      const res = await fetch(getApiUrl('/api/auth/demo-login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Demo login failed');
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userRole', data.role);
+      localStorage.setItem('user', JSON.stringify({ name: data.name, role: data.role }));
+
+      if (data.role === 'counselor') {
+        navigate('/dashboard/counselor');
+      } else if (data.role === 'trainer') {
+        navigate('/dashboard/trainer');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      setError(err.message || 'Demo login failed');
+    } finally {
+      setDemoRoleLoading(null);
+    }
+  };
+
   const loginWithGoogle = useGoogleLogin({
     onSuccess: handleGoogleSuccess,
     onError: () => setError('Google Login Failed')
@@ -114,57 +147,57 @@ export default function Login() {
         <div className="mb-8 flex items-center justify-between">
           <button
             onClick={() => navigate('/')}
-            className="flex items-center text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+            className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
+            <ArrowLeft className="w-4 h-4" /> Back to Home
           </button>
-          
           <ThemeToggle variant="icon" />
         </div>
 
-
-        {/* Logo & Title */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl mb-4">
-            <GraduationCap className="w-8 h-8 text-white" />
+        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-2xl p-8 border border-gray-200/60 dark:border-slate-700/60 shadow-xl shadow-black/5 dark:shadow-black/20 transition-colors duration-200">
+          {/* Logo & Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-600 text-white mb-4 shadow-lg shadow-purple-500/30">
+              <GraduationCap className="w-6 h-6" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              {isLogin ? "Welcome to SkillUp" : "Create Account"}
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              {isLogin ? "Sign in to continue your learning journey" : "Join thousands of learners worldwide"}
+            </p>
           </div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Welcome to SkillUp</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-2 transition-colors duration-200">
-            {isLogin ? "Sign in to continue your learning journey" : "Create your account to get started"}
-          </p>
-        </div>
 
-        {/* Login Card */}
-        <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-200 dark:border-slate-700 p-8 transition-colors duration-200">
+          {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 dark:text-red-300 rounded-lg text-sm border border-red-200 dark:border-red-800 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400">
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-xl text-red-600 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
-          <form onSubmit={handleSubmit} className="space-y-6">
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Full Name
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="John Doe"
+                    placeholder="Alex Mercer"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100"
                     required={!isLogin}
                   />
                 </div>
               </div>
             )}
-            
-            {/* Email Input */}
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Email
               </label>
               <div className="relative">
@@ -174,15 +207,14 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100"
                   required
                 />
               </div>
             </div>
 
-            {/* Password Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Password
               </label>
               <div className="relative">
@@ -192,23 +224,22 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-12 py-3 border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
 
-            {/* Confirm Password Input */}
             {!isLogin && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -218,40 +249,27 @@ export default function Login() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-12 py-3 border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200"
+                    className="w-full pl-10 pr-12 py-3 border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100"
                     required={!isLogin}
                   />
                 </div>
               </div>
             )}
 
-
-
-            {/* Forgot Password */}
-            {isLogin && (
-              <div className="flex items-center justify-end">
-                <button type="button" className="text-sm text-indigo-700 dark:text-indigo-300 dark:text-indigo-300 dark:text-indigo-400 hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-300 transition-colors duration-200">
-                  Forgot password?
-                </button>
-              </div>
-            )}
-
-            {/* Submit Button */}
             <Button
               type="submit"
               variant="primary"
               loading={submitting}
               loadingText={isLogin ? "Signing In..." : "Creating Account..."}
-              className="w-full justify-center !py-3 !text-base shadow-md hover:shadow-indigo-500/25"
+              className="w-full justify-center !py-3 !text-base shadow-md hover:shadow-purple-500/25 !bg-purple-600 hover:!bg-purple-700"
             >
               {isLogin ? "Sign In" : "Create Account"}
             </Button>
 
-
             {/* Divider */}
             <div className="relative flex items-center py-2">
               <div className="flex-grow border-t border-gray-200 dark:border-slate-700"></div>
-              <span className="flex-shrink-0 mx-4 text-sm text-gray-400">Or continue with</span>
+              <span className="flex-shrink-0 mx-4 text-xs uppercase tracking-wider text-gray-400">Or continue with</span>
               <div className="flex-grow border-t border-gray-200 dark:border-slate-700"></div>
             </div>
             
@@ -259,7 +277,7 @@ export default function Login() {
             <button
               type="button"
               onClick={() => loginWithGoogle()}
-              className="w-full flex items-center justify-center gap-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 py-3 rounded-lg font-medium border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 dark:focus:ring-offset-gray-800"
+              className="w-full flex items-center justify-center gap-3 bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 py-3 rounded-lg font-medium border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all cursor-pointer"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -271,9 +289,42 @@ export default function Login() {
             </button>
           </form>
 
+          {/* Quick 1-Click Demo Logins */}
+          <div className="mt-6 pt-5 border-t border-gray-200/80 dark:border-slate-700/80 text-center">
+            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2.5">
+              ⚡ Instant 1-Click Demo Evaluation Logins:
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('learner')}
+                disabled={demoRoleLoading !== null}
+                className="py-2 px-2 text-xs font-medium rounded-lg bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {demoRoleLoading === 'learner' ? 'Loading...' : '🎓 Learner'}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('trainer')}
+                disabled={demoRoleLoading !== null}
+                className="py-2 px-2 text-xs font-medium rounded-lg bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {demoRoleLoading === 'trainer' ? 'Loading...' : '👨‍🏫 Trainer'}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('counselor')}
+                disabled={demoRoleLoading !== null}
+                className="py-2 px-2 text-xs font-medium rounded-lg bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {demoRoleLoading === 'counselor' ? 'Loading...' : '🧑‍💼 Counselor'}
+              </button>
+            </div>
+          </div>
+
           {/* Toggle Login/Register */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">
+          <div className="mt-5 text-center">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {isLogin ? "Don't have an account? " : "Already have an account? "}
               <button
                 onClick={() => {
@@ -281,7 +332,7 @@ export default function Login() {
                   setError("");
                   setConfirmPassword("");
                 }}
-                className="text-indigo-700 dark:text-indigo-300 dark:text-indigo-300 dark:text-indigo-400 font-medium hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-300 transition-colors duration-200"
+                className="text-purple-600 dark:text-purple-400 font-semibold hover:underline"
               >
                 {isLogin ? "Sign up" : "Sign in"}
               </button>
@@ -290,7 +341,7 @@ export default function Login() {
         </div>
 
         {/* Additional Info */}
-        <div className="mt-6 text-center text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+        <div className="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
           <p>By continuing, you agree to SkillUp's Terms of Service and Privacy Policy</p>
         </div>
       </div>

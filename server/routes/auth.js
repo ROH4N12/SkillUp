@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { seedDemoUserData } from '../config/seedDatabase.js';
 
 const router = express.Router();
 
@@ -100,6 +101,47 @@ router.post('/google', async (req, res) => {
         token: generateToken(user._id, user.role),
     });
 
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Instant 1-Click Demo Login Route for Evaluation / Analysis
+router.post('/demo-login', async (req, res) => {
+  try {
+    const { role } = req.body;
+    const targetRole = ['learner', 'trainer', 'counselor'].includes(role) ? role : 'learner';
+
+    const demoProfiles = {
+      learner: { name: 'Alex Mercer (Learner)', email: 'demo.learner@skillup.ai' },
+      trainer: { name: 'Prof. Alex Turner (Senior Trainer)', email: 'demo.trainer@skillup.ai' },
+      counselor: { name: 'Dr. Sarah Mitchell (Academic Counselor)', email: 'demo.counselor@skillup.ai' },
+    };
+
+    const profile = demoProfiles[targetRole];
+
+    let user = await User.findOne({ email: profile.email });
+    if (!user) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash('DemoSkillUp2026!', salt);
+      user = await User.create({
+        name: profile.name,
+        email: profile.email,
+        password: hashedPassword,
+        role: targetRole,
+      });
+    }
+
+    // Populate realistic learner metrics if needed
+    await seedDemoUserData(user);
+
+    res.json({
+      _id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      token: generateToken(user._id, user.role),
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

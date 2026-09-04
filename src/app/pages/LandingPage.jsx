@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { 
   GraduationCap, 
   Brain, 
@@ -7,24 +7,32 @@ import {
   BarChart, 
   PlayCircle, 
   Bell, 
-  Users,
-  ChevronRight,
-  Sparkles,
-  TrendingUp,
-  Layout,
-  Briefcase,
-  Sun,
-  Moon
+  Users, 
+  ChevronRight, 
+  Sparkles, 
+  TrendingUp, 
+  Layout, 
+  Briefcase, 
+  Sun, 
+  Moon,
+  Zap,
+  ShieldCheck,
+  Compass,
+  ArrowRight,
+  Loader2
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { AuroraOverlay } from '../components/ui/aurora-overlay';
 import { ScrollReveal } from '../components/ui/ScrollReveal';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
+import { getApiUrl } from '../config/api';
 
 
 export default function LandingPage() {
+  const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,6 +41,40 @@ export default function LandingPage() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleDemoLogin = async (role) => {
+    try {
+      setDemoLoading(role);
+      const res = await fetch(getApiUrl('/api/auth/demo-login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Demo login failed');
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userRole', data.role);
+      localStorage.setItem('user', JSON.stringify({ name: data.name, role: data.role }));
+
+      if (data.role === 'counselor') {
+        navigate('/dashboard/counselor');
+      } else if (data.role === 'trainer') {
+        navigate('/dashboard/trainer');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      console.error('Demo login error:', err);
+      // Fallback navigation if network error
+      localStorage.setItem('userRole', role);
+      localStorage.setItem('user', JSON.stringify({ name: `Demo ${role}`, role }));
+      navigate(role === 'counselor' ? '/dashboard/counselor' : role === 'trainer' ? '/dashboard/trainer' : '/dashboard');
+    } finally {
+      setDemoLoading(null);
+    }
+  };
 
   return (
     <div className="relative min-h-screen bg-zinc-50 dark:bg-zinc-900 text-gray-900 dark:text-gray-100 transition-colors duration-200 font-sans overflow-hidden">
@@ -57,7 +99,6 @@ export default function LandingPage() {
             <div className="flex items-center gap-4">
               <ThemeToggle variant="icon" />
               <Link to="/login" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium text-sm transition-colors">
-
                 Login
               </Link>
               <Link to="/login" className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] shadow-md hover:shadow-indigo-500/25">
@@ -69,28 +110,127 @@ export default function LandingPage() {
       </nav>
 
       {/* 2. Hero Section */}
-      <section className="relative overflow-hidden pt-24 pb-32">
+      <section className="relative overflow-hidden pt-20 pb-28">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950/20 dark:to-purple-950/20" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-sm font-medium mb-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4" /> Introducing AI-Powered Learning
           </div>
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-8 leading-tight">
-            Your Own  <br className="hidden md:block"/>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
+            Your Own <br className="hidden md:block"/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">
               Personalized Learning Platform
             </span>
           </h1>
-          <p className="max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-400 mb-10 leading-relaxed">
+          <p className="max-w-2xl mx-auto text-lg md:text-xl text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
             Generate your perfect learning path, track your real-time progress, and master any skill with expert guidance and curated content.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/login" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-purple-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 shadow-xl shadow-indigo-500/25">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14">
+            <Link to="/login" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-purple-600 text-white px-8 py-3.5 rounded-full text-base md:text-lg font-semibold hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 shadow-xl shadow-indigo-500/25">
               Get Started <ChevronRight className="w-5 h-5" />
             </Link>
-            <a href="#features" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-slate-700 px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-100 dark:hover:bg-slate-700 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200">
+            <a href="#features" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-slate-700 px-8 py-3.5 rounded-full text-base md:text-lg font-semibold hover:bg-gray-100 dark:hover:bg-slate-700 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200">
               Explore Features
             </a>
+          </div>
+
+          {/* Instant 1-Click Demo Logins for Evaluation */}
+          <div className="max-w-4xl mx-auto pt-6 border-t border-gray-200/60 dark:border-slate-800/80">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-100/80 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-xs font-semibold uppercase tracking-wider mb-4">
+              <Zap className="w-3.5 h-3.5" /> Instant 1-Click Demo Logins
+            </div>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-6">
+              Evaluate live dashboards instantly with pre-configured role accounts (no registration needed):
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
+              {/* Learner Card */}
+              <button
+                onClick={() => handleDemoLogin('learner')}
+                disabled={demoLoading !== null}
+                className="group relative p-5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-2xl border border-indigo-200/70 dark:border-indigo-900/50 hover:border-indigo-500 dark:hover:border-indigo-400 shadow-sm hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-200 hover:-translate-y-1 text-left disabled:opacity-70 cursor-pointer"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                    <GraduationCap className="w-5 h-5" />
+                  </div>
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">
+                    Learner Role
+                  </span>
+                </div>
+                <h3 className="font-bold text-gray-900 dark:text-white text-base mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                  Learner Portal
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">
+                  Interactive learning paths, video player, and real-time progress analytics.
+                </p>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                  {demoLoading === 'learner' ? (
+                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Launching...</>
+                  ) : (
+                    <>Launch Learner View <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" /></>
+                  )}
+                </div>
+              </button>
+
+              {/* Trainer Card */}
+              <button
+                onClick={() => handleDemoLogin('trainer')}
+                disabled={demoLoading !== null}
+                className="group relative p-5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-2xl border border-purple-200/70 dark:border-purple-900/50 hover:border-purple-500 dark:hover:border-purple-400 shadow-sm hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-200 hover:-translate-y-1 text-left disabled:opacity-70 cursor-pointer"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                    <Briefcase className="w-5 h-5" />
+                  </div>
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300">
+                    Trainer Role
+                  </span>
+                </div>
+                <h3 className="font-bold text-gray-900 dark:text-white text-base mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                  Trainer Portal
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">
+                  Cohort management, curriculum monitoring, and dropout-risk interventions.
+                </p>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-purple-600 dark:text-purple-400">
+                  {demoLoading === 'trainer' ? (
+                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Launching...</>
+                  ) : (
+                    <>Launch Trainer View <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" /></>
+                  )}
+                </div>
+              </button>
+
+              {/* Counselor Card */}
+              <button
+                onClick={() => handleDemoLogin('counselor')}
+                disabled={demoLoading !== null}
+                className="group relative p-5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-2xl border border-emerald-200/70 dark:border-emerald-900/50 hover:border-emerald-500 dark:hover:border-emerald-400 shadow-sm hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-200 hover:-translate-y-1 text-left disabled:opacity-70 cursor-pointer"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+                    Counselor Role
+                  </span>
+                </div>
+                <h3 className="font-bold text-gray-900 dark:text-white text-base mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                  Counselor Portal
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">
+                  Academic counseling, high-risk student alerts, and outreach logs.
+                </p>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                  {demoLoading === 'counselor' ? (
+                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Launching...</>
+                  ) : (
+                    <>Launch Counselor View <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" /></>
+                  )}
+                </div>
+              </button>
+            </div>
           </div>
         </div>
       </section>
