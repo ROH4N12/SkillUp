@@ -147,7 +147,7 @@ export default function Login() {
           >
             <ArrowLeft className="w-4 h-4" /> Back to Home
           </button>
-          <ThemeToggle variant="icon" />
+          <ThemeToggle variant="switch" />
         </div>
 
         <div className="glass-default rounded-2xl p-8 shadow-xl transition-colors duration-200">

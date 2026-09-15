@@ -7,13 +7,59 @@ import { useTheme } from "../../contexts/ThemeContext";
  * Supports both "icon" mode (for navbars/headers) and "switch" mode (for sidebars/settings).
  * Triggers silky-smooth circular ripple View Transition from the click origin.
  */
-export function ThemeToggle({ variant = "icon", className = "", showLabel = false }) {
+export function ThemeToggle({ variant = "switch", className = "", showLabel = false }) {
   const { theme, toggleTheme } = useTheme();
   const isDark =
     theme === "dark" ||
     (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-  if (variant === "switch") {
+  if (variant === "switch" || variant === "pill") {
+    // Exact animated switch track style (pill track with gradient, stars, sliding knob with sun/moon)
+    const switchTrack = (
+      <div 
+        className={`w-11 h-6 rounded-full relative p-0.5 transition-all duration-300 ease-out border cursor-pointer ${
+          isDark 
+            ? "bg-gradient-to-r from-indigo-600 to-purple-600 border-indigo-500/40 shadow-inner shadow-indigo-950/40" 
+            : "bg-gradient-to-r from-amber-200 to-orange-200 border-amber-300/50 shadow-inner"
+        }`}
+      >
+        {/* Subtle star/sun decorations inside track */}
+        <div className="absolute inset-0 flex items-center justify-between px-1.5 text-[9px] pointer-events-none opacity-60">
+          <span className={`transition-opacity duration-200 ${isDark ? "opacity-100 text-indigo-200" : "opacity-0"}`}>✦</span>
+          <span className={`transition-opacity duration-200 ${isDark ? "opacity-0" : "opacity-100 text-amber-600"}`}>☼</span>
+        </div>
+
+        {/* Sliding knob */}
+        <div 
+          className={`w-5 h-5 rounded-full bg-white shadow-md flex items-center justify-center transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+            isDark ? "translate-x-5 shadow-indigo-950/30" : "translate-x-0 shadow-orange-950/20"
+          }`}
+        >
+          {isDark ? (
+            <Moon className="w-3 h-3 text-indigo-600" />
+          ) : (
+            <Sun className="w-3 h-3 text-amber-500" />
+          )}
+        </div>
+      </div>
+    );
+
+    // Standalone compact pill switch for headers / navbars
+    if (!showLabel) {
+      return (
+        <button
+          onClick={toggleTheme}
+          type="button"
+          className={`relative inline-flex items-center justify-center p-1 rounded-full hover:opacity-90 active:scale-95 transition-all focus:outline-none select-none cursor-pointer ${className}`}
+          title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {switchTrack}
+        </button>
+      );
+    }
+
+    // Full row switch with label for settings / sidebar
     return (
       <button
         onClick={toggleTheme}
@@ -37,33 +83,7 @@ export function ThemeToggle({ variant = "icon", className = "", showLabel = fals
           <span className="text-sm font-medium">Dark Mode</span>
         </div>
 
-        {/* Animated switch track */}
-        <div 
-          className={`w-11 h-6 rounded-full relative p-0.5 transition-all duration-300 ease-out border ${
-            isDark 
-              ? "bg-gradient-to-r from-indigo-600 to-purple-600 border-indigo-500/40 shadow-inner shadow-indigo-950/40" 
-              : "bg-gradient-to-r from-amber-200 to-orange-200 border-amber-300/50 shadow-inner"
-          }`}
-        >
-          {/* Subtle star/cloud decorations inside track */}
-          <div className="absolute inset-0 flex items-center justify-between px-1.5 text-[9px] pointer-events-none opacity-60">
-            <span className={`transition-opacity duration-200 ${isDark ? "opacity-100 text-indigo-200" : "opacity-0"}`}>✦</span>
-            <span className={`transition-opacity duration-200 ${isDark ? "opacity-0" : "opacity-100 text-amber-600"}`}>☼</span>
-          </div>
-
-          {/* Sliding knob */}
-          <div 
-            className={`w-5 h-5 rounded-full bg-white shadow-md flex items-center justify-center transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-              isDark ? "translate-x-5 shadow-indigo-950/30" : "translate-x-0 shadow-orange-950/20"
-            }`}
-          >
-            {isDark ? (
-              <Moon className="w-3 h-3 text-indigo-600" />
-            ) : (
-              <Sun className="w-3 h-3 text-amber-500" />
-            )}
-          </div>
-        </div>
+        {switchTrack}
       </button>
     );
   }

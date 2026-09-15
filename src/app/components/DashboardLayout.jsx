@@ -206,11 +206,6 @@ export function DashboardLayout() {
               })}
             </ul>
           </nav>
-          
-          {/* Sidebar Bottom Actions */}
-          <div className="p-3.5 border-t border-white/40 dark:border-white/10 space-y-1.5">
-            <ThemeToggle variant="switch" />
-          </div>
         </div>
       </aside>
 
@@ -255,8 +250,8 @@ export function DashboardLayout() {
             </div>
 
             <div className="flex items-center gap-3">
-              {/* Animated Theme Toggle */}
-              <ThemeToggle variant="icon" />
+              {/* Animated Theme Toggle (pill switch) */}
+              <ThemeToggle variant="switch" />
 
               {/* Notifications Bell with Dropdown */}
               <div className="relative" ref={notifRef}>
