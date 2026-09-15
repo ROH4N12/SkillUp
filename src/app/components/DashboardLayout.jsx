@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "../contexts/ThemeContext";
-import { AuroraOverlay } from "./ui/aurora-overlay";
+import { WavyBackground } from "./ui/blue-meshy-background";
 import { ThemeToggle } from "./ui/ThemeToggle";
 import { getApiUrl } from "../config/api";
 
@@ -45,19 +45,20 @@ export function DashboardLayout() {
   const notifRef = useRef(null);
 
 
-  let userName = "Current User";
+  let userName = "Learner";
   let userRole = localStorage.getItem('userRole') || 'learner';
-  let userInitials = "CU";
+  let userInitials = "L";
   try {
     const user = JSON.parse(localStorage.getItem('user'));
-    if (user?.name) {
-      userName = user.name;
-      userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0,2) || "CU";
+    if (user?.name || user?.username || user?.email) {
+      userName = user.name || user.username || user.email.split('@')[0];
+      userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0,2) || "L";
     }
     if (user?.role) {
       userRole = user.role;
     }
   } catch(e) {}
+
 
   // Fetch unread count
   useEffect(() => {
@@ -129,8 +130,8 @@ export function DashboardLayout() {
   }, []);
 
   return (
-    <div className="flex h-screen bg-zinc-50 dark:bg-zinc-900 relative overflow-hidden">
-      <AuroraOverlay />
+    <div className="flex h-screen bg-transparent relative overflow-hidden">
+      <WavyBackground waveOpacity={0.4} blur={12} speed="slow" />
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div 
@@ -142,22 +143,22 @@ export function DashboardLayout() {
       {/* Sidebar */}
       <aside className={`
         fixed lg:static inset-y-0 left-0 z-30
-        w-64 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-r border-gray-200/80 dark:border-slate-700/80
+        w-64 glass-subtle border-r border-white/50 dark:border-white/10
         transform transition-transform duration-300 ease-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between p-5 border-b border-gray-200/80 dark:border-slate-700/80">
+          <div className="flex items-center justify-between p-5 border-b border-white/40 dark:border-white/10">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm shadow-indigo-500/20">
+              <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-500/25">
                 <GraduationCap className="w-5 h-5 text-white" />
               </div>
-              <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-gray-100">SkillUp</span>
+              <span className="font-extrabold text-xl tracking-tight text-gray-900 dark:text-gray-100">SkillUp</span>
             </div>
             <button 
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg text-gray-500 dark:text-gray-400 transition-colors"
+              className="lg:hidden p-1.5 hover:bg-white/50 dark:hover:bg-slate-700 rounded-lg text-gray-500 dark:text-gray-400 transition-colors"
               aria-label="Close sidebar"
             >
               <X className="w-5 h-5" />
@@ -166,7 +167,7 @@ export function DashboardLayout() {
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-3.5 space-y-1">
-            <ul className="space-y-1">
+            <ul className="space-y-1.5">
               {menuItems.filter(item => {
                 return item.roles.includes(userRole);
               }).map((item) => {
@@ -178,11 +179,11 @@ export function DashboardLayout() {
                       to={item.path}
                       onClick={() => setSidebarOpen(false)}
                       className={`
-                        group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium
+                        group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold
                         transition-all duration-150 ease-out active:scale-[0.98] select-none
                         ${isActive 
-                          ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 shadow-sm shadow-indigo-500/5' 
-                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100/70 dark:hover:bg-slate-700/50 hover:text-gray-900 dark:hover:text-gray-100'
+                          ? 'glass-pill bg-indigo-500/15 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-400/30 dark:border-indigo-500/20 shadow-xs' 
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-white/40 dark:hover:bg-slate-800/40 hover:text-gray-900 dark:hover:text-gray-100'
                         }
                       `}
                     >
@@ -199,7 +200,7 @@ export function DashboardLayout() {
           </nav>
           
           {/* Sidebar Bottom Actions */}
-          <div className="p-3.5 border-t border-gray-200/80 dark:border-slate-700/80 space-y-1.5">
+          <div className="p-3.5 border-t border-white/40 dark:border-white/10 space-y-1.5">
             <ThemeToggle variant="switch" />
           </div>
         </div>
@@ -209,24 +210,23 @@ export function DashboardLayout() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top navbar */}
         <header className={`
-          bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-6 py-3.5 z-20 transition-all duration-200
+          glass-subtle px-6 py-3.5 z-20 transition-all duration-200
           ${isScrolled 
             ? 'border-b border-indigo-500/20 shadow-md shadow-black/5 dark:shadow-black/25' 
-            : 'border-b border-gray-200/80 dark:border-slate-700/80 shadow-none'}
+            : 'border-b border-white/40 dark:border-white/10 shadow-none'}
         `}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-slate-700 active:scale-90 rounded-lg text-gray-600 dark:text-gray-300 transition-all"
+                className="lg:hidden p-2 hover:bg-white/50 dark:hover:bg-slate-700 active:scale-90 rounded-lg text-gray-600 dark:text-gray-300 transition-all"
                 aria-label="Open sidebar"
               >
-
                 <Menu className="w-5 h-5" />
               </button>
               
               {/* Search bar */}
-              <div className="hidden md:flex items-center gap-2 bg-gray-100/80 dark:bg-slate-700/60 border border-transparent focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20 rounded-xl px-3.5 py-2 w-80 lg:w-96 transition-all duration-150">
+              <div className="hidden md:flex items-center gap-2 glass-pill rounded-full px-4 py-2 w-80 lg:w-96 transition-all duration-150 border border-white/60 dark:border-white/10 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20">
                 <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
                 <input
                   type="text"
@@ -251,16 +251,15 @@ export function DashboardLayout() {
               <ThemeToggle variant="icon" />
 
               {/* Notifications Bell with Dropdown */}
-
               <div className="relative" ref={notifRef}>
                 <button
                   onClick={openNotifDropdown}
-                  className="relative p-2 hover:bg-gray-100 dark:hover:bg-slate-700/60 active:scale-90 rounded-xl text-gray-500 dark:text-gray-400 transition-all focus:outline-none"
+                  className="relative p-2 hover:glass-pill active:scale-90 rounded-xl text-gray-500 dark:text-gray-400 transition-all focus:outline-none"
                   aria-label="Notifications"
                 >
                   <Bell className="w-5 h-5" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold px-1 animate-pulse">
+                    <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold px-1 animate-pulse shadow-sm shadow-rose-500/40">
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
@@ -268,7 +267,7 @@ export function DashboardLayout() {
 
                 {/* Notifications Dropdown */}
                 {notifOpen && (
-                  <div className="dropdown-enter absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200/80 dark:border-slate-700 p-4 z-50 overflow-hidden">
+                  <div className="dropdown-enter absolute right-0 top-full mt-2 w-80 sm:w-96 glass-default rounded-2xl shadow-2xl border border-white/70 dark:border-white/10 p-4 z-50 overflow-hidden">
                     <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-slate-700">
                       <div className="flex items-center gap-2">
                         <h4 className="font-semibold text-sm text-gray-900 dark:text-gray-100">Notifications</h4>
@@ -281,7 +280,7 @@ export function DashboardLayout() {
                       <Link 
                         to="/dashboard/alerts" 
                         onClick={() => setNotifOpen(false)}
-                        className="text-xs text-indigo-700 dark:text-indigo-300 hover:underline"
+                        className="text-xs text-indigo-700 dark:text-indigo-300 hover:underline font-semibold"
                       >
                         View all
                       </Link>
@@ -297,7 +296,7 @@ export function DashboardLayout() {
                           <div 
                             key={n._id} 
                             onClick={(e) => markRead(e, n._id)}
-                            className={`py-3 px-2 flex items-start gap-3 rounded-xl transition-all cursor-pointer ${n.read ? 'opacity-60 hover:opacity-100' : 'bg-indigo-50/50 dark:bg-indigo-950/20'} hover:bg-gray-50 dark:hover:bg-slate-700/40`}
+                            className={`py-3 px-2 flex items-start gap-3 rounded-xl transition-all cursor-pointer ${n.read ? 'opacity-60 hover:opacity-100' : 'bg-indigo-50/50 dark:bg-indigo-950/20'} hover:bg-white/50 dark:hover:bg-slate-700/40`}
                           >
                             <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0 mt-0.5">
                               <Bell className="w-3.5 h-3.5" />
@@ -318,27 +317,27 @@ export function DashboardLayout() {
               </div>
 
               {/* User profile with animated dropdown */}
-              <div className="relative pl-3 border-l border-gray-200 dark:border-slate-700" ref={profileRef}>
+              <div className="relative pl-3 border-l border-white/40 dark:border-white/10" ref={profileRef}>
                 <button
                   onClick={() => setProfileOpen(prev => !prev)}
-                  className="flex items-center gap-2.5 p-1 rounded-xl hover:bg-gray-100/80 dark:hover:bg-slate-700/50 active:scale-95 transition-all focus:outline-none select-none"
+                  className="flex items-center gap-2.5 p-1 rounded-xl hover:glass-pill active:scale-95 transition-all focus:outline-none select-none"
                 >
                   <div className="text-right hidden sm:block">
-                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-tight">{userName}</div>
-                    <div className="text-[11px] text-gray-500 dark:text-gray-400 capitalize">{userRole}</div>
+                    <div className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">{userName}</div>
+                    <div className="text-[11px] text-gray-500 dark:text-gray-400 capitalize font-medium">{userRole}</div>
                   </div>
-                  <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-sm shadow-indigo-500/20">
+                  <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-md shadow-indigo-500/25">
                     <span className="text-white text-xs font-bold">{userInitials}</span>
                   </div>
                 </button>
                 
                 {/* Profile dropdown */}
                 {profileOpen && (
-                  <div className="dropdown-enter absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-200/80 dark:border-slate-700 py-1 z-50 overflow-hidden">
+                  <div className="dropdown-enter absolute right-0 top-full mt-2 w-48 glass-default rounded-xl shadow-xl border border-white/70 dark:border-white/10 py-1 z-50 overflow-hidden">
                     <Link
                       to="/dashboard/settings"
                       onClick={() => setProfileOpen(false)}
-                      className="block px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                      className="block px-4 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-slate-700 transition-colors"
                     >
                       Account Settings
                     </Link>
@@ -349,7 +348,7 @@ export function DashboardLayout() {
                         localStorage.removeItem('user');
                         window.location.href = '/login';
                       }}
-                      className="w-full text-left px-4 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors flex items-center gap-2"
+                      className="w-full text-left px-4 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors flex items-center gap-2"
                     >
                       Sign Out
                     </button>
@@ -363,7 +362,7 @@ export function DashboardLayout() {
         {/* Page content with smooth subtle page-enter animation */}
         <main 
           onScroll={(e) => setIsScrolled(e.currentTarget.scrollTop > 10)}
-          className="flex-1 overflow-y-auto p-6 relative z-[1]"
+          className="flex-1 overflow-y-auto p-5 sm:p-6 lg:p-7 relative z-[1]"
         >
           <div key={location.pathname} className="page-enter">
             <Outlet />

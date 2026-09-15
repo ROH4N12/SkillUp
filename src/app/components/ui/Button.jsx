@@ -22,7 +22,9 @@ export function Button({
   `;
 
   const variantStyles = {
-    primary: "bg-purple-600 text-white hover:bg-purple-700 shadow-sm hover:shadow-purple-500/20 hover:-translate-y-0.5",
+    primary: "bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 text-white border border-white/20 shadow-md shadow-indigo-500/25 hover:from-indigo-500 hover:to-purple-500 hover:shadow-lg hover:shadow-indigo-500/35 hover:-translate-y-0.5",
+    liquid: "bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 text-white border border-white/30 shadow-[0_8px_20px_-4px_rgba(99,102,241,0.45),inset_0_1px_1px_0_rgba(255,255,255,0.4)] hover:from-indigo-500 hover:to-purple-500 hover:-translate-y-0.5",
+    glass: "glass-pill text-indigo-700 dark:text-indigo-300 border border-indigo-300/40 dark:border-indigo-500/30 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 hover:-translate-y-0.5",
     secondary: "bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-700 hover:-translate-y-0.5",
     outline: "border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800 hover:-translate-y-0.5",
     ghost: "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800",

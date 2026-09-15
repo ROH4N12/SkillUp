@@ -3,11 +3,10 @@ import { useNavigate } from "react-router";
 import { GraduationCap, Mail, Lock, Eye, EyeOff, User, ArrowLeft, Sun, Moon } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { useGoogleLogin } from "@react-oauth/google";
-import { AuroraOverlay } from "../components/ui/aurora-overlay";
+import { WavyBackground } from "../components/ui/blue-meshy-background";
 import { Button } from "../components/ui/Button";
 import { ThemeToggle } from "../components/ui/ThemeToggle";
 import { getApiUrl } from "../config/api";
-
 
 export default function Login() {
   const navigate = useNavigate();
@@ -35,7 +34,6 @@ export default function Login() {
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
       const body = isLogin ? { email, password } : { name, email, password };
-
       
       const res = await fetch(getApiUrl(endpoint), {
         method: 'POST',
@@ -68,11 +66,9 @@ export default function Login() {
     }
   };
 
-
   const handleGoogleSuccess = async (tokenResponse) => {
     try {
       const { access_token } = tokenResponse;
-      // We pass the currently selected role in case this is a new signup via Google
       const res = await fetch(getApiUrl('/api/auth/google'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -140,8 +136,8 @@ export default function Login() {
   });
 
   return (
-    <div className="relative min-h-screen bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center p-4 transition-colors duration-200 overflow-hidden">
-      <AuroraOverlay />
+    <div className="relative min-h-screen bg-transparent flex items-center justify-center p-4 transition-colors duration-200 overflow-hidden">
+      <WavyBackground waveOpacity={0.4} blur={12} speed="slow" />
       <div className="relative z-10 w-full max-w-md">
         {/* Top Header Actions */}
         <div className="mb-8 flex items-center justify-between">
@@ -154,7 +150,7 @@ export default function Login() {
           <ThemeToggle variant="icon" />
         </div>
 
-        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-2xl p-8 border border-gray-200/60 dark:border-slate-700/60 shadow-xl shadow-black/5 dark:shadow-black/20 transition-colors duration-200">
+        <div className="glass-default rounded-2xl p-8 shadow-xl transition-colors duration-200">
           {/* Logo & Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-600 text-white mb-4 shadow-lg shadow-purple-500/30">
@@ -189,7 +185,7 @@ export default function Login() {
                     placeholder="Alex Mercer"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 dark:bg-slate-900/70 text-gray-900 dark:text-gray-100"
                     required={!isLogin}
                   />
                 </div>
@@ -207,7 +203,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 dark:bg-slate-900/70 text-gray-900 dark:text-gray-100"
                   required
                 />
               </div>
@@ -224,7 +220,7 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-12 py-3 border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 dark:bg-slate-900/70 text-gray-900 dark:text-gray-100"
                   required
                 />
                 <button
@@ -249,7 +245,7 @@ export default function Login() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-12 py-3 border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100"
+                    className="w-full pl-10 pr-12 py-3 border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 dark:bg-slate-900/70 text-gray-900 dark:text-gray-100"
                     required={!isLogin}
                   />
                 </div>
@@ -277,7 +273,7 @@ export default function Login() {
             <button
               type="button"
               onClick={() => loginWithGoogle()}
-              className="w-full flex items-center justify-center gap-3 bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 py-3 rounded-lg font-medium border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all cursor-pointer"
+              className="w-full flex items-center justify-center gap-3 bg-white/80 dark:bg-slate-900/80 text-gray-700 dark:text-gray-300 py-3 rounded-lg font-medium border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all cursor-pointer"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -307,7 +303,7 @@ export default function Login() {
                 type="button"
                 onClick={() => handleDemoLogin('trainer')}
                 disabled={demoRoleLoading !== null}
-                className="py-2 px-2 text-xs font-medium rounded-lg bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 transition-colors disabled:opacity-50 cursor-pointer"
+                className="py-2 px-2 text-xs font-medium rounded-lg bg-purple-50 dark:purple-950/50 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {demoRoleLoading === 'trainer' ? 'Loading...' : '👨‍🏫 Trainer'}
               </button>

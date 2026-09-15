@@ -7,18 +7,28 @@ export function DashboardCard({
   className = "",
   action,
   interactive = false,
+  variant = "default",
   onClick
 }) {
+  const variantStyles = {
+    default: "glass-default rounded-2xl",
+    glass: "glass-default rounded-2xl",
+    elevated: "glass-elevated rounded-2xl",
+    subtle: "glass-subtle rounded-2xl",
+    solid: "bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700/80 shadow-sm",
+  };
+
+  const baseStyle = variantStyles[variant] || variantStyles.default;
+
   return (
     <div
       onClick={onClick}
       className={`
-        bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700/80 p-6
+        ${baseStyle} p-6
         transition-all duration-200
-        ${interactive || onClick ? "card-interactive cursor-pointer hover:border-indigo-200 dark:hover:border-slate-600 active:scale-[0.985] active:shadow-xs select-none" : "shadow-sm"}
+        ${interactive || onClick ? "card-interactive cursor-pointer hover:border-indigo-200 dark:hover:border-slate-600 active:scale-[0.985] active:shadow-xs select-none" : ""}
         ${className}
       `}
-
     >
       {(title || action) && (
         <div className="flex items-center justify-between mb-4">
@@ -33,4 +43,5 @@ export function DashboardCard({
     </div>
   );
 }
+
 

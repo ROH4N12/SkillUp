@@ -27,7 +27,7 @@ export const AuroraOverlay = ({
           after:content-[""] after:absolute after:inset-0 after:[background-image:var(--white-gradient),var(--aurora)] 
           after:dark:[background-image:var(--dark-gradient),var(--aurora)]
           after:[background-size:200%,_100%] 
-          after:animate-gpu-aurora after:mix-blend-difference
+          after:animate-aurora after:mix-blend-difference
           pointer-events-none
           absolute -inset-[20px] opacity-40 [transform:translate3d(0,0,0)] [backface-visibility:hidden] [will-change:transform]`,
           showRadialGradient &&

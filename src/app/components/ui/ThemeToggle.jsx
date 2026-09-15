@@ -18,7 +18,7 @@ export function ThemeToggle({ variant = "icon", className = "", showLabel = fals
       <button
         onClick={toggleTheme}
         type="button"
-        className={`w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100/70 dark:hover:bg-slate-700/50 active:scale-[0.98] transition-all select-none group ${className}`}
+        className={`w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl text-gray-700 dark:text-gray-300 hover:glass-pill active:scale-[0.98] transition-all select-none group ${className}`}
         aria-label="Toggle dark mode"
       >
         <div className="flex items-center gap-2.5">

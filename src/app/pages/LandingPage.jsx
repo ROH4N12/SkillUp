@@ -22,7 +22,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
-import { AuroraOverlay } from '../components/ui/aurora-overlay';
+import { WavyBackground } from '../components/ui/blue-meshy-background';
 import { ScrollReveal } from '../components/ui/ScrollReveal';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { getApiUrl } from '../config/api';
@@ -77,8 +77,8 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-zinc-50 dark:bg-zinc-900 text-gray-900 dark:text-gray-100 transition-colors duration-200 font-sans overflow-hidden">
-      <AuroraOverlay />
+    <div className="relative min-h-screen bg-transparent text-gray-900 dark:text-gray-100 transition-colors duration-200 font-sans overflow-hidden">
+      <WavyBackground waveOpacity={0.4} blur={12} speed="slow" />
       
       {/* 1. Navbar */}
       <nav className={`sticky top-0 z-50 transition-all duration-200 ${
