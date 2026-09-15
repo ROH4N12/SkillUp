@@ -804,3 +804,33 @@ main,
 }
 
 
+/* ═══════════════════════════════════════════════════════════════════════
+   PERFORMANCE: CSS CONTAINMENT & ISOLATION
+   Minimize layout/paint cost for heavy glassmorphism elements.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Glass elements are self-contained — layout changes inside them
+   don't trigger reflows outside, and vice-versa. */
+.glass-default,
+.glass-card,
+.glass-elevated,
+.glass-card-elevated {
+  contain: layout style paint;
+}
+
+/* Sidebar and header are fixed layout regions — isolate their paint layer */
+aside,
+header {
+  contain: layout style;
+}
+
+/* ScrollReveal containers need GPU layer but should not hog will-change permanently.
+   The animation component sets will-change inline only during animation. */
+   
+/* Scrollable containers — passive scroll + overscroll containment */
+.overflow-y-auto,
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: auto; /* Don't apply smooth scrolling inside containers — only on html */
+}

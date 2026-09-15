@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getApiUrl } from '../config/api';
 
 export function useFetch(url, initialData = null) {
@@ -6,10 +6,11 @@ export function useFetch(url, initialData = null) {
   const [loading, setLoading] = useState(initialData === null);
   const [isRefetching, setIsRefetching] = useState(false);
   const [error, setError] = useState(null);
+  const hasDataRef = useRef(initialData !== null);
 
   const fetchData = useCallback(async (options = {}) => {
     const isSilent = options?.silent ?? false;
-    if (!isSilent && data === null) {
+    if (!isSilent && !hasDataRef.current) {
       setLoading(true);
     } else {
       setIsRefetching(true);
@@ -26,6 +27,7 @@ export function useFetch(url, initialData = null) {
       if (!res.ok) throw new Error('Fetch failed');
       const json = await res.json();
       setData(json);
+      hasDataRef.current = true;
       setError(null);
       return json;
     } catch (err) {
@@ -35,7 +37,7 @@ export function useFetch(url, initialData = null) {
       setLoading(false);
       setIsRefetching(false);
     }
-  }, [url, data]);
+  }, [url]);
 
   useEffect(() => {
     fetchData();

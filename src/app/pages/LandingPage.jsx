@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { 
   GraduationCap, 
@@ -453,7 +453,7 @@ export default function LandingPage() {
 }
 
 // Subcomponents for cleaner code
-function FeatureCard({ icon, title, desc }) {
+const FeatureCard = memo(function FeatureCard({ icon, title, desc }) {
   return (
     <div className="p-7 rounded-2xl glass-default hover:border-indigo-500/40 hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] transition-all duration-300 cursor-pointer select-none">
       <div className="w-12 h-12 rounded-xl glass-pill flex items-center justify-center mb-6">
@@ -463,9 +463,9 @@ function FeatureCard({ icon, title, desc }) {
       <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{desc}</p>
     </div>
   );
-}
+});
 
-function StepItem({ number, title, desc }) {
+const StepItem = memo(function StepItem({ number, title, desc }) {
   return (
     <div className="flex-1 flex flex-col items-center text-center p-6 glass-default rounded-2xl shadow-sm hover:-translate-y-1 active:scale-[0.98] transition-all duration-300 select-none">
       <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl flex items-center justify-center font-extrabold text-lg mb-4 shadow-md shadow-indigo-500/25">
@@ -475,4 +475,4 @@ function StepItem({ number, title, desc }) {
       <p className="text-gray-500 dark:text-gray-400 text-xs max-w-[220px] leading-relaxed">{desc}</p>
     </div>
   );
-}
+});

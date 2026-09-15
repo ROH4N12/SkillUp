@@ -45,6 +45,27 @@ export default defineConfig({
     },
   },
 
+  // ─── Build Optimization ────────────────────────────────────────────
+  build: {
+    // Target modern browsers for smaller output
+    target: 'es2020',
+    // Recharts alone is ~580kB minified — suppress warning for vendor chunks
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        // Split large vendor libraries into separate cacheable chunks
+        manualChunks: {
+          // React core — shared by every page, cached forever
+          'vendor-react': ['react', 'react-dom', 'react-router'],
+          // Recharts — only needed by dashboard/progress pages
+          'vendor-charts': ['recharts'],
+          // Google OAuth — only needed on login page
+          'vendor-auth': ['@react-oauth/google'],
+        },
+      },
+    },
+  },
+
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
 })

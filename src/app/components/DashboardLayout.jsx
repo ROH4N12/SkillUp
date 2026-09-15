@@ -15,7 +15,7 @@ import {
   Moon,
   CheckCircle2
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 import { WavyBackground } from "./ui/blue-meshy-background";
 import { ThemeToggle } from "./ui/ThemeToggle";
@@ -45,19 +45,29 @@ export function DashboardLayout() {
   const notifRef = useRef(null);
 
 
-  let userName = "Learner";
-  let userRole = localStorage.getItem('userRole') || 'learner';
-  let userInitials = "L";
-  try {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user?.name || user?.username || user?.email) {
-      userName = user.name || user.username || user.email.split('@')[0];
-      userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0,2) || "L";
-    }
-    if (user?.role) {
-      userRole = user.role;
-    }
-  } catch(e) {}
+  // Memoize user data parsing — avoid re-parsing JSON on every render
+  const { userName, userRole, userInitials } = useMemo(() => {
+    let name = "Learner";
+    let role = localStorage.getItem('userRole') || 'learner';
+    let initials = "L";
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (user?.name || user?.username || user?.email) {
+        name = user.name || user.username || user.email.split('@')[0];
+        initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0,2) || "L";
+      }
+      if (user?.role) {
+        role = user.role;
+      }
+    } catch(e) {}
+    return { userName: name, userRole: role, userInitials: initials };
+  }, []);
+
+  // Memoize filtered menu items — only recompute if role changes
+  const filteredMenuItems = useMemo(
+    () => menuItems.filter(item => item.roles.includes(userRole)),
+    [userRole]
+  );
 
 
   // Fetch unread count
@@ -168,9 +178,7 @@ export function DashboardLayout() {
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-3.5 space-y-1">
             <ul className="space-y-1.5">
-              {menuItems.filter(item => {
-                return item.roles.includes(userRole);
-              }).map((item) => {
+              {filteredMenuItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
                 return (

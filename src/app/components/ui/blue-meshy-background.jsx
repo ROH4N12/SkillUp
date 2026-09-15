@@ -1,13 +1,18 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useMemo, useCallback } from "react";
 import { createNoise3D } from "simplex-noise";
-import { useTheme } from "../../contexts/ThemeContext";
 
 /**
  * WavyBackground / BlueMeshyBackground
  * 
- * Reusable animated generative wavy canvas background.
- * Uses 3D simplex noise to create organic, fluid undulating waves.
- * Can be used both as a layout wrapper or as a fixed background layer.
+ * High-performance animated generative wavy canvas background.
+ * Uses 3D simplex noise for organic, fluid undulating waves.
+ * 
+ * Performance optimizations:
+ * - Noise instance created once (useRef) — never recreated
+ * - All animation state stored in refs — zero re-renders during animation
+ * - Resize handler debounced to 200ms
+ * - Wave drawing step increased to 8px (~40% fewer noise calls per frame)
+ * - CSS containment applied for layout isolation
  */
 export function WavyBackground({
   children,
@@ -22,11 +27,16 @@ export function WavyBackground({
   isFixed = true,
   ...props
 }) {
-  const noise = createNoise3D();
+  // ─── Stable refs (never cause re-renders) ─────────────────────────
+  const noiseRef = useRef(null);
+  if (!noiseRef.current) {
+    noiseRef.current = createNoise3D();
+  }
   const canvasRef = useRef(null);
-  const { theme } = useTheme();
+  const animIdRef = useRef(null);
+  const ntRef = useRef(0);
 
-  const getSpeed = () => {
+  const getSpeed = useCallback(() => {
     switch (speed) {
       case "slow":
         return 0.001;
@@ -35,15 +45,19 @@ export function WavyBackground({
       default:
         return typeof speed === "number" ? speed : 0.0015;
     }
-  };
+  }, [speed]);
 
-  const waveColors = colors ?? [
-    "#38bdf8", // Sky Blue
-    "#818cf8", // Indigo
-    "#c084fc", // Purple
-    "#a855f7", // Violet
-    "#22d3ee", // Cyan
-  ];
+  const waveColors = useMemo(
+    () =>
+      colors ?? [
+        "#38bdf8", // Sky Blue
+        "#818cf8", // Indigo
+        "#c084fc", // Purple
+        "#a855f7", // Violet
+        "#22d3ee", // Cyan
+      ],
+    [colors]
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -54,21 +68,47 @@ export function WavyBackground({
     let w = (ctx.canvas.width = window.innerWidth);
     let h = (ctx.canvas.height = window.innerHeight);
     ctx.filter = `blur(${blur}px)`;
-    let nt = 0;
 
+    // Debounced resize — avoids layout thrashing during window resize
+    let resizeTimer;
     const handleResize = () => {
-      if (!canvas) return;
-      w = ctx.canvas.width = window.innerWidth;
-      h = ctx.canvas.height = window.innerHeight;
-      ctx.filter = `blur(${blur}px)`;
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (!canvas) return;
+        w = ctx.canvas.width = window.innerWidth;
+        h = ctx.canvas.height = window.innerHeight;
+        ctx.filter = `blur(${blur}px)`;
+      }, 200);
     };
 
     window.addEventListener("resize", handleResize);
 
-    let animationId;
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    const noise = noiseRef.current;
+    const speedVal = getSpeed();
+
+    const drawWave = (n) => {
+      ntRef.current += speedVal;
+      const nt = ntRef.current;
+      for (let i = 0; i < n; i++) {
+        ctx.beginPath();
+        ctx.lineWidth = waveWidth || 50;
+        ctx.strokeStyle = waveColors[i % waveColors.length];
+        // Step of 8px instead of 5px — 40% fewer noise calls per frame
+        for (let x = 0; x < w; x += 8) {
+          const y = noise(x / 800, 0.3 * i, nt) * 100;
+          ctx.lineTo(x, y + h * 0.5);
+        }
+        ctx.stroke();
+        ctx.closePath();
+      }
+    };
 
     const render = () => {
+      // Read theme directly from DOM — avoids React state dependency
       const isDark = document.documentElement.classList.contains("dark");
       const currentBg = backgroundFill || (isDark ? "#090d16" : "#f8faff");
 
@@ -79,32 +119,18 @@ export function WavyBackground({
       drawWave(5);
 
       if (!prefersReducedMotion) {
-        animationId = requestAnimationFrame(render);
-      }
-    };
-
-    const drawWave = (n) => {
-      nt += getSpeed();
-      for (let i = 0; i < n; i++) {
-        ctx.beginPath();
-        ctx.lineWidth = waveWidth || 50;
-        ctx.strokeStyle = waveColors[i % waveColors.length];
-        for (let x = 0; x < w; x += 5) {
-          const y = noise(x / 800, 0.3 * i, nt) * 100;
-          ctx.lineTo(x, y + h * 0.5); // centered wave
-        }
-        ctx.stroke();
-        ctx.closePath();
+        animIdRef.current = requestAnimationFrame(render);
       }
     };
 
     render();
 
     return () => {
-      if (animationId) cancelAnimationFrame(animationId);
+      if (animIdRef.current) cancelAnimationFrame(animIdRef.current);
+      clearTimeout(resizeTimer);
       window.removeEventListener("resize", handleResize);
     };
-  }, [blur, speed, waveWidth, waveOpacity, backgroundFill, colors, theme]);
+  }, [blur, speed, waveWidth, waveOpacity, backgroundFill, waveColors, getSpeed]);
 
   if (!children) {
     // Standalone background mode
