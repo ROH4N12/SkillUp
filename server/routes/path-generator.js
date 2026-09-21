@@ -19,80 +19,179 @@ const router = express.Router();
 // ═══════════════════════════════════════════════════════════════════════
 
 const DOMAIN_ALIASES = {
+  // Game Development
+  'game development':         'Game Development',
+  'game dev':                 'Game Development',
+  'game':                     'Game Development',
+  'gaming':                   'Game Development',
+  'unity':                    'Game Development',
+  'unreal':                   'Game Development',
+  'unreal engine':            'Game Development',
+  'game design':              'Game Development',
+  'godot':                    'Game Development',
+  'c# game':                  'Game Development',
+  '2d game':                  'Game Development',
+  '3d game':                  'Game Development',
+
+  // Blockchain
+  'blockchain':               'Blockchain',
+  'web3':                     'Blockchain',
+  'solidity':                 'Blockchain',
+  'smart contracts':          'Blockchain',
+  'crypto':                   'Blockchain',
+  'ethereum':                 'Blockchain',
+  'dapps':                    'Blockchain',
+
+  // DevOps
+  'devops':                   'DevOps',
+  'ci/cd':                    'DevOps',
+  'docker':                   'DevOps',
+  'kubernetes':               'DevOps',
+  'jenkins':                  'DevOps',
+  'terraform':                'DevOps',
+  'infrastructure':           'DevOps',
+  'ansible':                  'DevOps',
+
+  // Full Stack Development
+  'full stack':               'Full Stack Development',
+  'fullstack':                'Full Stack Development',
+  'full stack development':   'Full Stack Development',
+  'mern':                     'Full Stack Development',
+  'mean':                     'Full Stack Development',
+
+  // Programming Fundamentals
+  'programming fundamentals': 'Programming Fundamentals',
+  'programming':              'Programming Fundamentals',
+  'coding':                   'Programming Fundamentals',
+  'c programming':            'Programming Fundamentals',
+  'c++':                      'Programming Fundamentals',
+  'java':                     'Programming Fundamentals',
+  'learn to code':            'Programming Fundamentals',
+  'coding basics':            'Programming Fundamentals',
+
+  // Database Management
+  'database':                 'Database Management',
+  'database management':      'Database Management',
+  'sql':                      'Database Management',
+  'postgresql':               'Database Management',
+  'mongodb':                  'Database Management',
+  'mysql':                    'Database Management',
+  'dbms':                     'Database Management',
+  'nosql':                    'Database Management',
+
+  // Computer Networks
+  'computer networks':        'Computer Networks',
+  'networking':               'Computer Networks',
+  'tcp/ip':                   'Computer Networks',
+  'network engineering':      'Computer Networks',
+
+  // Operating Systems
+  'operating systems':        'Operating Systems',
+  'os':                       'Operating Systems',
+  'linux':                    'Operating Systems',
+  'unix':                     'Operating Systems',
+  'kernel':                   'Operating Systems',
+
+  // System Design
+  'system design':            'System Design',
+  'high level design':        'System Design',
+  'low level design':         'System Design',
+  'distributed systems':      'System Design',
+  'scalability':              'System Design',
+
+  // Software Engineering
+  'software engineering':     'Software Engineering',
+  'software architecture':    'Software Engineering',
+  'design patterns':          'Software Engineering',
+  'clean code':               'Software Engineering',
+  'agile':                    'Software Engineering',
+
+  // Data Engineering
+  'data engineering':         'Data Engineering',
+  'etl':                      'Data Engineering',
+  'spark':                    'Data Engineering',
+  'apache spark':             'Data Engineering',
+  'kafka':                    'Data Engineering',
+  'data pipeline':            'Data Engineering',
+  'big data':                 'Data Engineering',
+
+  // Internet of Things
+  'iot':                      'Internet of Things',
+  'internet of things':       'Internet of Things',
+  'arduino':                  'Internet of Things',
+  'raspberry pi':             'Internet of Things',
+  'embedded systems':         'Internet of Things',
+
   // Frontend
-  'frontend':             'Frontend Development',
-  'frontend development': 'Frontend Development',
-  'front end':            'Frontend Development',
-  'front-end':            'Frontend Development',
-  'react':                'Frontend Development',
-  'html':                 'Frontend Development',
-  'css':                  'Frontend Development',
-  'javascript frontend':  'Frontend Development',
-  'web development':      'Frontend Development',
-  'web design':           'Frontend Development',
-  'ui development':       'Frontend Development',
+  'frontend':                 'Frontend Development',
+  'frontend development':     'Frontend Development',
+  'front end':                'Frontend Development',
+  'front-end':                'Frontend Development',
+  'react':                    'Frontend Development',
+  'html':                     'Frontend Development',
+  'css':                      'Frontend Development',
+  'javascript frontend':      'Frontend Development',
+  'web development':          'Frontend Development',
+  'web design':               'Frontend Development',
+  'ui development':           'Frontend Development',
 
   // Backend
-  'backend':              'Backend Development',
-  'backend development':  'Backend Development',
-  'back end':             'Backend Development',
-  'back-end':             'Backend Development',
-  'node.js':              'Backend Development',
-  'express':              'Backend Development',
-  'server side':          'Backend Development',
-  'api development':      'Backend Development',
-  'java backend':         'Backend Development',
-  'spring boot':          'Backend Development',
+  'backend':                  'Backend Development',
+  'backend development':      'Backend Development',
+  'back end':                 'Backend Development',
+  'back-end':                 'Backend Development',
+  'node.js':                  'Backend Development',
+  'express':                  'Backend Development',
+  'server side':              'Backend Development',
+  'api development':          'Backend Development',
+  'java backend':             'Backend Development',
+  'spring boot':              'Backend Development',
 
   // Data Science
-  'data science':         'Data Science',
-  'data analytics':       'Data Science',
-  'data analysis':        'Data Science',
-  'pandas':               'Data Science',
+  'data science':             'Data Science',
+  'data analytics':           'Data Science',
+  'data analysis':            'Data Science',
+  'pandas':                   'Data Science',
 
   // Machine Learning
-  'machine learning':     'Machine Learning',
-  'ml':                   'Machine Learning',
-  'deep learning':        'Machine Learning',
-  'ai':                   'Machine Learning',
-  'artificial intelligence': 'Machine Learning',
-  'nlp':                  'Machine Learning',
-  'tensorflow':           'Machine Learning',
-  'neural networks':      'Machine Learning',
+  'machine learning':         'Machine Learning',
+  'ml':                       'Machine Learning',
+  'deep learning':            'Machine Learning',
+  'ai':                       'Machine Learning',
+  'artificial intelligence':  'Machine Learning',
+  'nlp':                      'Machine Learning',
+  'tensorflow':               'Machine Learning',
+  'neural networks':          'Machine Learning',
 
   // Cybersecurity
-  'cybersecurity':        'Cybersecurity',
-  'cyber security':       'Cybersecurity',
-  'security':             'Cybersecurity',
-  'ethical hacking':      'Cybersecurity',
-  'pentesting':           'Cybersecurity',
-  'network security':     'Cybersecurity',
+  'cybersecurity':            'Cybersecurity',
+  'cyber security':           'Cybersecurity',
+  'security':                 'Cybersecurity',
+  'ethical hacking':          'Cybersecurity',
+  'pentesting':               'Cybersecurity',
+  'network security':         'Cybersecurity',
 
   // Cloud Computing
-  'cloud computing':      'Cloud Computing',
-  'cloud':                'Cloud Computing',
-  'aws':                  'Cloud Computing',
-  'devops':               'Cloud Computing',
-  'docker':               'Cloud Computing',
-  'kubernetes':           'Cloud Computing',
-  'ci/cd':                'Cloud Computing',
+  'cloud computing':          'Cloud Computing',
+  'cloud':                    'Cloud Computing',
+  'aws':                      'Cloud Computing',
 
   // UI/UX Design
-  'ui/ux design':         'UI/UX Design',
-  'ui/ux':                'UI/UX Design',
-  'ux design':            'UI/UX Design',
-  'ui design':            'UI/UX Design',
-  'user experience':      'UI/UX Design',
-  'figma':                'UI/UX Design',
-  'design':               'UI/UX Design',
+  'ui/ux design':             'UI/UX Design',
+  'ui/ux':                    'UI/UX Design',
+  'ux design':                'UI/UX Design',
+  'ui design':                'UI/UX Design',
+  'user experience':          'UI/UX Design',
+  'figma':                    'UI/UX Design',
+  'design':                   'UI/UX Design',
 
   // Mobile Development
-  'mobile development':   'Mobile Development',
-  'mobile':               'Mobile Development',
-  'react native':         'Mobile Development',
-  'flutter':              'Mobile Development',
-  'app development':      'Mobile Development',
-  'mobile app':           'Mobile Development',
+  'mobile development':       'Mobile Development',
+  'mobile':                   'Mobile Development',
+  'react native':             'Mobile Development',
+  'flutter':                  'Mobile Development',
+  'app development':          'Mobile Development',
+  'mobile app':               'Mobile Development',
 };
 
 // Stage size limits (unchanged)
@@ -104,17 +203,18 @@ const STAGE_LIMITS = {
 const MAX_TOTAL = 12;
 
 // ═══════════════════════════════════════════════════════════════════════
-// DEPRECATED — Resolve user goal → exact domain string
+// Resolve user goal → exact domain string
 // ═══════════════════════════════════════════════════════════════════════
-/** @deprecated Use semantic embedding pipeline instead */
 export function resolveDomain(goal) {
+  if (!goal) return null;
   const goalLower = goal.toLowerCase().trim();
 
   // 1. Direct alias lookup
   if (DOMAIN_ALIASES[goalLower]) return DOMAIN_ALIASES[goalLower];
 
-  // 2. Partial alias match (goal contains an alias key or vice-versa)
-  for (const [alias, domain] of Object.entries(DOMAIN_ALIASES)) {
+  // 2. Partial alias match (longest alias first for high specificity)
+  const sorted = Object.entries(DOMAIN_ALIASES).sort((a, b) => b[0].length - a[0].length);
+  for (const [alias, domain] of sorted) {
     if (goalLower.includes(alias) || alias.includes(goalLower)) {
       return domain;
     }
@@ -291,7 +391,24 @@ router.post('/generate-path', protect, async (req, res) => {
 
     // Fallback: If embeddings are warming up or returned no courses, use domain-matching
     if (scored.length === 0) {
-      const resolvedDomain = resolveDomain(goal) || 'Frontend Development';
+      let resolvedDomain = resolveDomain(goal);
+
+      // If no direct domain alias, score all courses by keyword relevance to find the best domain
+      if (!resolvedDomain) {
+        const goalWords = goal.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+        const allCourses = await Course.find({});
+        const domainScores = {};
+        for (const c of allCourses) {
+          const text = `${c.title} ${c.domain} ${(c.skills || []).join(' ')} ${c.description || ''}`.toLowerCase();
+          for (const w of goalWords) {
+            if (text.includes(w)) {
+              domainScores[c.domain] = (domainScores[c.domain] || 0) + 1;
+            }
+          }
+        }
+        resolvedDomain = Object.entries(domainScores).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Programming Fundamentals';
+      }
+
       let domainCourses = await Course.find({ domain: resolvedDomain });
       if (domainCourses.length < 2) {
         domainCourses = await Course.find({}).limit(10);
@@ -343,7 +460,7 @@ router.post('/generate-path', protect, async (req, res) => {
     const domainFreq = {};
     for (const d of topDomains) domainFreq[d] = (domainFreq[d] || 0) + 1;
     const dominantDomain = Object.entries(domainFreq)
-      .sort((a, b) => b[1] - a[1])[0]?.[0] || 'Custom';
+      .sort((a, b) => b[1] - a[1])[0]?.[0] || resolveDomain(goal) || 'Custom';
 
     const pathTitle = `${dominantDomain} Learning Path`;
     const pathDescription = `Personalized ${dominantDomain} roadmap generated for ${level || 'all'} level.`;

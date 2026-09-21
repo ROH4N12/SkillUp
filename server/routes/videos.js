@@ -64,6 +64,35 @@ const VIDEO_FALLBACKS = {
     { videoId: 'M988_fsOSWo', title: 'AWS Full Course for Beginners', thumbnail: 'https://img.youtube.com/vi/M988_fsOSWo/mqdefault.jpg', channel: 'Simplilearn' },
     { videoId: 'NKEFWyqJ5XA', title: 'Cloud Computing Tutorial', thumbnail: 'https://img.youtube.com/vi/NKEFWyqJ5XA/mqdefault.jpg', channel: 'Great Learning' },
   ],
+  'game': [
+    { videoId: 'iIOIT3dCy5w', title: 'How To Think Like A Game Designer', thumbnail: 'https://img.youtube.com/vi/iIOIT3dCy5w/mqdefault.jpg', channel: "Game Maker's Toolkit" },
+    { videoId: 'gB1F9G0JXOo', title: 'Learn Unity in 1 Hour - 2024', thumbnail: 'https://img.youtube.com/vi/gB1F9G0JXOo/mqdefault.jpg', channel: 'Brackeys' },
+    { videoId: 'g_s0y59PRmY', title: 'Unreal Engine 5 Beginner Tutorial', thumbnail: 'https://img.youtube.com/vi/g_s0y59PRmY/mqdefault.jpg', channel: 'freeCodeCamp' },
+  ],
+  'unity': [
+    { videoId: 'XtQMytORBmM', title: 'Unity Beginner Tutorial 2024', thumbnail: 'https://img.youtube.com/vi/XtQMytORBmM/mqdefault.jpg', channel: 'Brackeys' },
+    { videoId: 'gB1F9G0JXOo', title: 'Learn Unity in 1 Hour', thumbnail: 'https://img.youtube.com/vi/gB1F9G0JXOo/mqdefault.jpg', channel: 'Brackeys' },
+  ],
+  'unreal': [
+    { videoId: 'g_s0y59PRmY', title: 'Unreal Engine 5 Beginner Tutorial', thumbnail: 'https://img.youtube.com/vi/g_s0y59PRmY/mqdefault.jpg', channel: 'freeCodeCamp' },
+    { videoId: 'k-zMkzmduqI', title: 'Unreal Engine 5 C++ Full Course', thumbnail: 'https://img.youtube.com/vi/k-zMkzmduqI/mqdefault.jpg', channel: 'freeCodeCamp' },
+  ],
+  'blockchain': [
+    { videoId: 'gyMwXuJbiVo', title: 'Blockchain and Smart Contracts Tutorial', thumbnail: 'https://img.youtube.com/vi/gyMwXuJbiVo/mqdefault.jpg', channel: 'freeCodeCamp' },
+    { videoId: 'M576WGiDBdQ', title: 'Web3 & Solidity Full Course', thumbnail: 'https://img.youtube.com/vi/M576WGiDBdQ/mqdefault.jpg', channel: 'freeCodeCamp' },
+  ],
+  'devops': [
+    { videoId: 'hQcFE0RD0cQ', title: 'DevOps Engineering Course for Beginners', thumbnail: 'https://img.youtube.com/vi/hQcFE0RD0cQ/mqdefault.jpg', channel: 'freeCodeCamp' },
+    { videoId: 'j5Zsa_eOXeY', title: 'Docker Tutorial for Beginners', thumbnail: 'https://img.youtube.com/vi/j5Zsa_eOXeY/mqdefault.jpg', channel: 'Programming with Mosh' },
+  ],
+  'database': [
+    { videoId: 'HXV3zeRR3h4', title: 'SQL Tutorial - Full Database Course for Beginners', thumbnail: 'https://img.youtube.com/vi/HXV3zeRR3h4/mqdefault.jpg', channel: 'freeCodeCamp' },
+    { videoId: 'ofme2o29ngU', title: 'MongoDB Full Course 2024', thumbnail: 'https://img.youtube.com/vi/ofme2o29ngU/mqdefault.jpg', channel: 'Dave Gray' },
+  ],
+  'system design': [
+    { videoId: 'm8Icp_Cid5o', title: 'System Design Course for Beginners', thumbnail: 'https://img.youtube.com/vi/m8Icp_Cid5o/mqdefault.jpg', channel: 'freeCodeCamp' },
+    { videoId: 'bUHFg8CZFCA', title: 'System Design Interview – Step By Step Guide', thumbnail: 'https://img.youtube.com/vi/bUHFg8CZFCA/mqdefault.jpg', channel: 'ByteByteGo' },
+  ],
   'default': [
     { videoId: 'PkZNo7MFNFg', title: 'Programming Fundamentals', thumbnail: 'https://img.youtube.com/vi/PkZNo7MFNFg/mqdefault.jpg', channel: 'freeCodeCamp' },
     { videoId: 'zOjov-2OZ0E', title: 'Learn to Code - Full Course', thumbnail: 'https://img.youtube.com/vi/zOjov-2OZ0E/mqdefault.jpg', channel: 'freeCodeCamp' },
