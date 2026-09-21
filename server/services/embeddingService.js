@@ -26,7 +26,16 @@
 //
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { pipeline } from '@xenova/transformers';
+import { pipeline, env } from '@xenova/transformers';
+import path from 'path';
+import os from 'os';
+
+// Configure cache for serverless environments (Vercel has read-only filesystem except /tmp)
+try {
+  env.cacheDir = path.join(os.tmpdir(), '.cache', 'transformers');
+} catch (e) {
+  // Ignore if unable to set
+}
 
 // ── Singleton pipeline & cache ──────────────────────────────────────────
 let extractor = null;

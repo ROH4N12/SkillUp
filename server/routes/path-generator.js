@@ -254,43 +254,57 @@ router.post('/generate-path', protect, async (req, res) => {
       return res.status(400).json({ message: 'Please provide a learning goal.' });
     }
 
+    let scored = [];
+
     // ─── Step 1: Semantic ranking across ALL courses ────────────────
-    if (!embeddingsReady()) {
-      // Embeddings haven't been built yet (edge case on very first request)
-      return res.status(503).json({
-        message: 'The recommendation engine is still warming up. Please try again in a few seconds.',
-        path: null,
-      });
+    if (embeddingsReady()) {
+      try {
+        const rankings = await rankCoursesByGoal(goal);
+        const allCourses = await Course.find({});
+        const courseMap = new Map();
+        for (const c of allCourses) {
+          courseMap.set(c._id.toString(), c);
+        }
+
+        scored = rankings
+          .map(({ courseId, similarity }) => {
+            const course = courseMap.get(courseId);
+            if (!course) return null;
+            return {
+              course,
+              score: semanticRerank(course, similarity, level, knownSkills),
+              similarity, // keep raw similarity for debugging
+            };
+          })
+          .filter(Boolean)
+          .sort((a, b) => {
+            // Primary: level order (beginner → intermediate → advanced)
+            const levelDiff = getLevelOrder(a.course) - getLevelOrder(b.course);
+            if (levelDiff !== 0) return levelDiff;
+            // Secondary: higher re-ranked score first
+            return b.score - a.score;
+          });
+      } catch (embErr) {
+        console.warn('[PathGenerator] Semantic ranking failed, falling back to keyword matching:', embErr.message);
+      }
     }
 
-    const rankings = await rankCoursesByGoal(goal);
-
-    // ─── Step 2: Fetch all course documents in a single query ───────
-    const allCourses = await Course.find({});
-    const courseMap = new Map();
-    for (const c of allCourses) {
-      courseMap.set(c._id.toString(), c);
-    }
-
-    // ─── Step 3: Re-rank with level & skill-gap bonuses ─────────────
-    const scored = rankings
-      .map(({ courseId, similarity }) => {
-        const course = courseMap.get(courseId);
-        if (!course) return null;
-        return {
-          course,
-          score: semanticRerank(course, similarity, level, knownSkills),
-          similarity, // keep raw similarity for debugging
-        };
-      })
-      .filter(Boolean)
-      .sort((a, b) => {
-        // Primary: level order (beginner → intermediate → advanced)
+    // Fallback: If embeddings are warming up or returned no courses, use domain-matching
+    if (scored.length === 0) {
+      const resolvedDomain = resolveDomain(goal) || 'Frontend Development';
+      let domainCourses = await Course.find({ domain: resolvedDomain });
+      if (domainCourses.length < 2) {
+        domainCourses = await Course.find({}).limit(10);
+      }
+      scored = domainCourses.map(course => ({
+        course,
+        score: scoreCourseInDomain(course, goal, level, knownSkills)
+      })).sort((a, b) => {
         const levelDiff = getLevelOrder(a.course) - getLevelOrder(b.course);
         if (levelDiff !== 0) return levelDiff;
-        // Secondary: higher re-ranked score first
         return b.score - a.score;
       });
+    }
 
     // ─── Step 4: Deduplicate similar courses ────────────────────────
     const deduped = deduplicateCourses(scored);

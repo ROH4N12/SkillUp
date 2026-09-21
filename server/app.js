@@ -32,9 +32,13 @@ app.use(async (req, res, next) => {
 
     // Build course embeddings if not yet ready (runs once per cold start)
     if (!embeddingsReady()) {
-      const courses = await Course.find({});
-      if (courses.length > 0) {
-        await buildCourseEmbeddings(courses);
+      try {
+        const courses = await Course.find({});
+        if (courses.length > 0) {
+          await buildCourseEmbeddings(courses);
+        }
+      } catch (embErr) {
+        console.warn('[EmbeddingService] Notice: Embeddings initialization deferred or failed:', embErr.message);
       }
     }
 
