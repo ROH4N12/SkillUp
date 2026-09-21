@@ -8,21 +8,6 @@ import {
   Zap,
   Sparkles
 } from "lucide-react";
-import {
-  LineChart,
-  Line,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
-} from "recharts";
-
 import { useFetch } from "../hooks/useFetch";
 import { Link } from "react-router";
 import { Skeleton, SkeletonMetrics, SkeletonChart } from "../components/ui/Skeleton";
@@ -30,44 +15,8 @@ import { ProgressBar } from "../components/ProgressBar";
 import { GlassCard } from "../components/ui/GlassCard";
 import { GlassIcon } from "../components/ui/GlassIcon";
 import { GlassButton } from "../components/ui/GlassButton";
-
-// Custom Tooltip for Line Chart with frosted styling
-function CustomLineTooltip({ active, payload, label }) {
-  if (active && payload && payload.length) {
-    return (
-      <div className="glass-pill px-3.5 py-2 rounded-xl shadow-xl border border-white/60 dark:border-white/15 backdrop-blur-md">
-        <p className="text-xs font-semibold text-gray-500 dark:text-slate-400">{label}</p>
-        <p className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400 mt-0.5">
-          {payload[0].value}% <span className="text-xs font-medium text-gray-500 dark:text-slate-400">Progress</span>
-        </p>
-      </div>
-    );
-  }
-  return null;
-}
-
-// Custom Tooltip for Radar Chart with frosted styling
-function CustomRadarTooltip({ active, payload }) {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    return (
-      <div className="glass-pill px-3.5 py-2.5 rounded-xl shadow-xl border border-white/60 dark:border-white/15 backdrop-blur-md">
-        <p className="text-xs font-bold text-gray-900 dark:text-white">{data.skill}</p>
-        <div className="mt-1.5 space-y-1 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-xs" />
-            <span className="text-gray-700 dark:text-slate-200 font-medium">Current: {data.current}%</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-xs" />
-            <span className="text-gray-700 dark:text-slate-200 font-medium">Required: {data.required}%</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  return null;
-}
+import { GlowingLineChart } from "../components/ui/GlowingLineChart";
+import { GlowingRadarChart } from "../components/ui/GlowingRadarChart";
 
 export default function LearnerDashboard() {
   const { data: dashboardData, loading: dashboardLoading } = useFetch('/api/learner/dashboard');
@@ -263,120 +212,55 @@ export default function LearnerDashboard() {
       {/* ── 4. Charts Row (Learning Progress & Skill Gap Analysis with Guaranteed Readability) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* Learning Progress (Line Chart) */}
+        {/* Learning Progress (Glowing Line Chart) */}
         <GlassCard variant="default" className="flex flex-col justify-between p-6 sm:p-7">
-          <div className="mb-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Learning Progress</h3>
-            <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-slate-400 mt-0.5">Last 6 months</p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Learning Progress</h3>
+              <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-slate-400 mt-0.5">Last 6 months</p>
+            </div>
+            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>+18.4%</span>
+            </span>
           </div>
 
-          <div className="w-full h-64 sm:h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={skillProgressData}
-                margin={{ top: 15, right: 15, left: -20, bottom: 5 }}
-              >
-                <defs>
-                  <linearGradient id="progressLineGlow" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#6366f1" />
-                    <stop offset="50%" stopColor="#8b5cf6" />
-                    <stop offset="100%" stopColor="#6366f1" />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="4 4"
-                  stroke="rgba(148, 163, 184, 0.25)"
-                  vertical={true}
-                  horizontal={true}
-                />
-                <XAxis
-                  dataKey="month"
-                  stroke="rgba(100, 116, 139, 0.85)"
-                  fontSize={12}
-                  fontWeight={500}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke="rgba(100, 116, 139, 0.85)"
-                  fontSize={12}
-                  fontWeight={500}
-                  domain={[0, (dataMax) => Math.max(32, dataMax + 5)]}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip content={<CustomLineTooltip />} />
-                <Line
-                  type="monotone"
-                  dataKey="progress"
-                  stroke="url(#progressLineGlow)"
-                  strokeWidth={3.5}
-                  dot={{ fill: "#6366f1", r: 4, strokeWidth: 2, stroke: "#ffffff" }}
-                  activeDot={{ r: 7, fill: "#6366f1", stroke: "#ffffff", strokeWidth: 2.5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          <GlowingLineChart
+            data={skillProgressData}
+            dataKey="progress"
+            xKey="month"
+            type="bump"
+            height={240}
+            stroke="#6366f1"
+            unit="%"
+            showDots={true}
+          />
         </GlassCard>
 
-        {/* Skill Gap Analysis (Radar Chart) */}
+        {/* Skill Gap Analysis (Glowing Stroke Radar Chart) */}
         <GlassCard variant="default" className="flex flex-col justify-between p-6 sm:p-7">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">Skill Gap Analysis</h3>
-              <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-slate-400 mt-0.5">Current vs Required</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-slate-400 mt-0.5">Current vs Required Level</p>
             </div>
-
-            <div className="flex items-center gap-3 text-xs">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-xs" />
-                <span className="text-gray-700 dark:text-slate-300 font-semibold">Current</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-xs" />
-                <span className="text-gray-700 dark:text-slate-300 font-semibold">Required</span>
-              </div>
-            </div>
+            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+              <Target className="w-3.5 h-3.5" />
+              <span>Competency</span>
+            </span>
           </div>
 
-          <div className="w-full h-64 sm:h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={skillRadarData} margin={{ top: 10, right: 25, bottom: 10, left: 25 }}>
-                <PolarGrid stroke="rgba(148, 163, 184, 0.3)" />
-                <PolarAngleAxis
-                  dataKey="skill"
-                  stroke="rgba(71, 85, 105, 0.9)"
-                  fontSize={11.5}
-                  fontWeight={600}
-                  tick={{ fill: 'currentColor', opacity: 0.9 }}
-                />
-                <PolarRadiusAxis
-                  angle={90}
-                  domain={[0, 100]}
-                  stroke="rgba(148, 163, 184, 0.5)"
-                  fontSize={10}
-                />
-                <Radar
-                  name="Current"
-                  dataKey="current"
-                  stroke="#6366f1"
-                  fill="#6366f1"
-                  fillOpacity={0.45}
-                  strokeWidth={2}
-                />
-                <Radar
-                  name="Required"
-                  dataKey="required"
-                  stroke="#a855f7"
-                  fill="#a855f7"
-                  fillOpacity={0.15}
-                  strokeWidth={1.5}
-                  strokeDasharray="4 4"
-                />
-                <Tooltip content={<CustomRadarTooltip />} />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
+          <GlowingRadarChart
+            data={skillRadarData}
+            angleKey="skill"
+            series={[
+              { dataKey: "current", name: "Current Level", stroke: "#6366f1", fill: "rgba(99, 102, 241, 0.15)" },
+              { dataKey: "required", name: "Required Level", stroke: "#a855f7", fill: "none", strokeDasharray: "4 4" },
+            ]}
+            height={240}
+            unit="%"
+            showLegend={true}
+          />
         </GlassCard>
 
       </div>

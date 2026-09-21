@@ -6,7 +6,7 @@ import {
   Mail, MapPin, Phone, BookOpen, Target, Clock
 } from "lucide-react";
 import {
-  BarChart, Bar, PieChart, Pie, Cell,
+  BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from "recharts";
 
@@ -15,6 +15,8 @@ import { useToast } from "../contexts/ToastContext";
 import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
 import { Skeleton, SkeletonMetrics, SkeletonChart, SkeletonList, SkeletonCourse } from "../components/ui/Skeleton";
+import { RoundedPieChart } from "../components/ui/RoundedPieChart";
+import { MiniChart } from "../components/ui/MiniChart";
 
 export default function CounselorDashboard() {
   const { data, loading, refetch } = useFetch('/api/counselor/dashboard');
@@ -190,38 +192,41 @@ export default function CounselorDashboard() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <DashboardCard title="Readiness Score Distribution">
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={readinessDistribution}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="range" stroke="#9ca3af" fontSize={12} />
-              <YAxis stroke="#9ca3af" fontSize={12} />
-              <Tooltip />
-              <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+        <DashboardCard
+          title="Readiness Score Distribution"
+          subtitle="Score frequency across cohorts"
+        >
+          <MiniChart
+            data={readinessDistribution}
+            xKey="range"
+            dataKey="count"
+            unit="learners"
+            height={200}
+            barColor="#6366f1"
+            accentColor="#8b5cf6"
+            showGrid={true}
+            showXAxis={true}
+            showYAxis={true}
+            showStats={true}
+          />
         </DashboardCard>
 
-        <DashboardCard title="Skill Gap Analytics">
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={skillGapData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {skillGapData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+        <DashboardCard
+          title="Skill Gap Analytics"
+          subtitle="Cohort readiness distribution"
+        >
+          <RoundedPieChart
+            data={skillGapData}
+            dataKey="value"
+            nameKey="name"
+            height={220}
+            innerRadius={36}
+            outerRadius={76}
+            cornerRadius={8}
+            paddingAngle={4}
+            showLabels={true}
+            showLegend={true}
+          />
         </DashboardCard>
       </div>
 

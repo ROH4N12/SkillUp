@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 export function Modal({
@@ -10,6 +11,12 @@ export function Modal({
   maxWidth = "max-w-lg",
   position = "top",
 }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Handle ESC key and body scroll lock
   useEffect(() => {
     if (!isOpen) return;
@@ -28,19 +35,19 @@ export function Modal({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  return createPortal(
     <div
-      className={`fixed inset-0 z-50 flex justify-center p-4 overflow-y-auto ${
+      className={`fixed inset-0 z-[999] flex justify-center p-4 overflow-y-auto ${
         position === "top"
-          ? "items-start pt-6 sm:pt-10 md:pt-12"
+          ? "items-start pt-8 sm:pt-12 md:pt-16"
           : "items-center"
       }`}
     >
-      {/* Backdrop */}
+      {/* Clean backdrop without static blur filter */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm modal-backdrop-enter"
+        className="fixed inset-0 bg-black/45 dark:bg-black/65 modal-backdrop-enter transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -78,6 +85,9 @@ export function Modal({
 
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
+
+export default Modal;

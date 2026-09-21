@@ -19,6 +19,8 @@ import { useToast } from "../contexts/ToastContext";
 import { Button } from "../components/ui/Button";
 import { Skeleton } from "../components/ui/Skeleton";
 import { AccordionContent } from "../components/ui/AccordionContent";
+import { AlertDialog } from "../components/ui/HeroUIAlertDialog";
+import { Trash2, AlertTriangle, RefreshCw, RotateCcw } from "lucide-react";
 
 
 export default function Settings() {
@@ -398,17 +400,118 @@ export default function Settings() {
       </DashboardCard>
 
       {/* Danger Zone */}
-      <DashboardCard title="Danger Zone">
-        <div className="space-y-3">
-          <div className="p-4 bg-red-100 dark:bg-red-900/30 dark:bg-red-900/20 border border-red-200 dark:border-red-800 dark:border-red-800 rounded-lg">
-            <h4 className="font-semibold text-red-900 dark:text-red-400 mb-2">Delete Account</h4>
-            <p className="text-sm text-red-700 dark:text-red-300 dark:text-red-300 mb-3">
-              Once you delete your account, there is no going back. Please be certain.
-            </p>
-            <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium">
-              Delete Account
-            </button>
-          </div>
+      <DashboardCard title="Danger Zone" subtitle="Irreversible account and progress actions">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Reset Progress Alert Dialog */}
+          <AlertDialog>
+            <AlertDialog.Trigger className="group flex w-full items-center gap-3.5 rounded-2xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/60 dark:bg-amber-950/20 p-4 shadow-xs select-none hover:bg-amber-100/60 dark:hover:bg-amber-950/40 transition-all cursor-pointer">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400">
+                <RotateCcw className="size-5" />
+              </div>
+              <div className="flex flex-1 flex-col gap-0.5 text-left">
+                <p className="text-sm font-bold text-amber-900 dark:text-amber-300">Reset Learning Progress</p>
+                <p className="text-xs text-amber-700/80 dark:text-amber-400/80">Reset course milestones, completions & streaks</p>
+              </div>
+              <span className="px-3.5 py-1.5 text-xs font-bold rounded-xl text-amber-800 dark:text-amber-200 bg-amber-200/80 dark:bg-amber-900/70 group-hover:bg-amber-300/80 transition-all shadow-xs">
+                Reset
+              </span>
+            </AlertDialog.Trigger>
+            <AlertDialog.Backdrop>
+              <AlertDialog.Container>
+                <AlertDialog.Dialog className="sm:max-w-[420px]">
+                  <AlertDialog.CloseTrigger />
+                  <AlertDialog.Header>
+                    <AlertDialog.Icon status="warning">
+                      <RotateCcw className="size-5" />
+                    </AlertDialog.Icon>
+                    <AlertDialog.Heading>Reset all progress?</AlertDialog.Heading>
+                  </AlertDialog.Header>
+                  <AlertDialog.Body>
+                    <p className="text-sm text-gray-600 dark:text-slate-300">
+                      Are you sure you want to reset all your course completions, assessment scores, and streak history? Your account will remain active but progress will reset to 0%.
+                    </p>
+                  </AlertDialog.Body>
+                  <AlertDialog.Footer>
+                    <button
+                      type="button"
+                      slot="close"
+                      className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      slot="close"
+                      onClick={async () => {
+                        try {
+                          await apiCall('/api/learner/progress/reset', 'DELETE');
+                          toast.success("All learning progress has been reset");
+                        } catch {
+                          toast.error("Failed to reset progress");
+                        }
+                      }}
+                      className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+                    >
+                      Reset Progress
+                    </button>
+                  </AlertDialog.Footer>
+                </AlertDialog.Dialog>
+              </AlertDialog.Container>
+            </AlertDialog.Backdrop>
+          </AlertDialog>
+
+          {/* Delete Account Alert Dialog */}
+          <AlertDialog>
+            <AlertDialog.Trigger className="group flex w-full items-center gap-3.5 rounded-2xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/60 dark:bg-rose-950/20 p-4 shadow-xs select-none hover:bg-rose-100/60 dark:hover:bg-rose-950/40 transition-all cursor-pointer">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400">
+                <Trash2 className="size-5" />
+              </div>
+              <div className="flex flex-1 flex-col gap-0.5 text-left">
+                <p className="text-sm font-bold text-rose-900 dark:text-rose-300">Delete Account</p>
+                <p className="text-xs text-rose-700/80 dark:text-rose-400/80">Permanently wipe your account and all data</p>
+              </div>
+              <span className="px-3.5 py-1.5 text-xs font-bold rounded-xl text-rose-800 dark:text-rose-200 bg-rose-200/80 dark:bg-rose-900/70 group-hover:bg-rose-300/80 transition-all shadow-xs">
+                Delete
+              </span>
+            </AlertDialog.Trigger>
+            <AlertDialog.Backdrop>
+              <AlertDialog.Container>
+                <AlertDialog.Dialog className="sm:max-w-[420px]">
+                  <AlertDialog.CloseTrigger />
+                  <AlertDialog.Header>
+                    <AlertDialog.Icon status="danger">
+                      <Trash2 className="size-5" />
+                    </AlertDialog.Icon>
+                    <AlertDialog.Heading>Delete your account?</AlertDialog.Heading>
+                  </AlertDialog.Header>
+                  <AlertDialog.Body>
+                    <p className="text-sm text-gray-600 dark:text-slate-300">
+                      This action is permanent and cannot be undone. All your course progress, certificates, streak history, and personalized roadmap data will be permanently wiped.
+                    </p>
+                  </AlertDialog.Body>
+                  <AlertDialog.Footer>
+                    <button
+                      type="button"
+                      slot="close"
+                      className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      slot="close"
+                      onClick={() => {
+                        toast.error("Account deletion requested. Contacting support...");
+                      }}
+                      className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+                    >
+                      Delete Account
+                    </button>
+                  </AlertDialog.Footer>
+                </AlertDialog.Dialog>
+              </AlertDialog.Container>
+            </AlertDialog.Backdrop>
+          </AlertDialog>
         </div>
       </DashboardCard>
     </div>

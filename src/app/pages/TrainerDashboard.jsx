@@ -3,7 +3,7 @@ import { DashboardCard } from "../components/DashboardCard";
 import { ProgressBar } from "../components/ProgressBar";
 import { BookOpen, Users, TrendingDown, Award, Activity, CheckCircle, ChevronDown, ChevronUp, Search, X, Map, BarChart3, Send } from "lucide-react";
 import {
-  BarChart, Bar, LineChart, Line,
+  BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from "recharts";
 
@@ -14,6 +14,7 @@ import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
 import { Skeleton, SkeletonMetrics, SkeletonChart, SkeletonList, SkeletonCourse } from "../components/ui/Skeleton";
 import { AccordionContent } from "../components/ui/AccordionContent";
+import { GlowingLineChart } from "../components/ui/GlowingLineChart";
 
 
 export default function TrainerDashboard() {
@@ -260,20 +261,24 @@ export default function TrainerDashboard() {
           )}
         </DashboardCard>
 
-        <DashboardCard title="Performance Trends" subtitle="Last 6 weeks (real data)">
+        <DashboardCard
+          title="Performance Trends"
+          subtitle="Last 6 weeks cohort performance"
+        >
           {performanceData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={performanceData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="week" stroke="#9ca3af" fontSize={12} />
-                <YAxis stroke="#9ca3af" fontSize={12} />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="engagement" stroke="#6366f1" strokeWidth={2} name="Engagement %" />
-                <Line type="monotone" dataKey="completion" stroke="#14b8a6" strokeWidth={2} name="Completion %" />
-                <Line type="monotone" dataKey="avgScore" stroke="#a855f7" strokeWidth={2} name="Avg Score %" />
-              </LineChart>
-            </ResponsiveContainer>
+            <GlowingLineChart
+              data={performanceData}
+              xKey="week"
+              lines={[
+                { dataKey: "engagement", name: "Engagement", stroke: "#6366f1", type: "bump" },
+                { dataKey: "completion", name: "Completion", stroke: "#14b8a6", type: "bump" },
+                { dataKey: "avgScore", name: "Avg Score", stroke: "#a855f7", type: "bump" },
+              ]}
+              height={230}
+              unit="%"
+              showLegend={true}
+              showDots={false}
+            />
           ) : (
             <p className="text-sm text-gray-400 text-center py-12">No performance data yet.</p>
           )}

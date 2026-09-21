@@ -24,6 +24,8 @@ import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
 import { Skeleton, SkeletonMetrics, SkeletonChart, SkeletonCourse } from "../components/ui/Skeleton";
 import { AccordionContent } from "../components/ui/AccordionContent";
+import { AlertDialog } from "../components/ui/HeroUIAlertDialog";
+import { RotateCcw, Trash2 } from "lucide-react";
 
 
 export default function LearningPath() {
@@ -86,7 +88,6 @@ export default function LearningPath() {
   };
 
   const handleResetProgress = async () => {
-    if (!window.confirm('Are you sure you want to reset ALL your progress? This cannot be undone.')) return;
     try {
       await apiCall('/api/learner/progress/reset', 'DELETE');
       toast.info("Progress has been reset");
@@ -244,13 +245,58 @@ export default function LearningPath() {
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{pathData?.title || 'No Path Assigned'}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{pathData?.subtitle || 'Click "Customize Path" to generate your personalized roadmap!'}</p>
         </div>
-        <Button 
-          variant="primary"
-          icon={Sparkles}
-          onClick={() => setShowModal(true)}
-        >
-          Customize Path
-        </Button>
+        <div className="flex items-center gap-2.5">
+          {pathData?._id && (
+            <AlertDialog>
+              <AlertDialog.Trigger className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/40 rounded-xl hover:bg-rose-100/70 dark:hover:bg-rose-950/60 transition-all active:scale-95 shadow-xs select-none">
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset Path</span>
+              </AlertDialog.Trigger>
+              <AlertDialog.Backdrop>
+                <AlertDialog.Container>
+                  <AlertDialog.Dialog className="sm:max-w-[420px]">
+                    <AlertDialog.CloseTrigger />
+                    <AlertDialog.Header>
+                      <AlertDialog.Icon status="danger">
+                        <RotateCcw className="size-5" />
+                      </AlertDialog.Icon>
+                      <AlertDialog.Heading>Reset Learning Progress?</AlertDialog.Heading>
+                    </AlertDialog.Header>
+                    <AlertDialog.Body>
+                      <p className="text-sm text-gray-600 dark:text-slate-300">
+                        Are you sure you want to reset all your completed courses and stages for this path? This will reset your progress to 0% and cannot be undone.
+                      </p>
+                    </AlertDialog.Body>
+                    <AlertDialog.Footer>
+                      <button
+                        type="button"
+                        slot="close"
+                        className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        slot="close"
+                        onClick={handleResetProgress}
+                        className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+                      >
+                        Reset Progress
+                      </button>
+                    </AlertDialog.Footer>
+                  </AlertDialog.Dialog>
+                </AlertDialog.Container>
+              </AlertDialog.Backdrop>
+            </AlertDialog>
+          )}
+          <Button 
+            variant="primary"
+            icon={Sparkles}
+            onClick={() => setShowModal(true)}
+          >
+            Customize Path
+          </Button>
+        </div>
       </div>
 
       {/* Customize Path Modal with Intentional Backend Stages */}
@@ -654,21 +700,57 @@ export default function LearningPath() {
         </DashboardCard>
       )}
 
-      {/* Reset Progress */}
+      {/* Reset Progress Danger Zone with AlertDialog */}
       {allCourses.length > 0 && (
-        <DashboardCard title="Danger Zone">
-          <div className="p-4 bg-red-100 dark:bg-red-900/30 dark:bg-red-900/20 border border-red-200 dark:border-red-800 dark:border-red-800 rounded-lg">
-            <h4 className="font-semibold text-red-900 dark:text-red-400 mb-2">Reset All Progress</h4>
-            <p className="text-sm text-red-700 dark:text-red-300 dark:text-red-300 mb-3">
-              This will reset progress for all courses in your learning path. Your path will remain but all courses will go back to "Not Started".
-            </p>
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={handleResetProgress}
-            >
-              Reset All Progress
-            </Button>
+        <DashboardCard title="Danger Zone" subtitle="Irreversible learning path actions">
+          <div className="p-4 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h4 className="font-semibold text-rose-900 dark:text-rose-300 text-sm">Reset All Path Progress</h4>
+              <p className="text-xs text-rose-700/80 dark:text-rose-400/80">
+                This will reset progress for all courses in your learning path back to 0%. Your assigned curriculum will remain intact.
+              </p>
+            </div>
+            <AlertDialog>
+              <AlertDialog.Trigger className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-all active:scale-95 shadow-xs shrink-0 select-none">
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset All Progress</span>
+              </AlertDialog.Trigger>
+              <AlertDialog.Backdrop>
+                <AlertDialog.Container>
+                  <AlertDialog.Dialog className="sm:max-w-[420px]">
+                    <AlertDialog.CloseTrigger />
+                    <AlertDialog.Header>
+                      <AlertDialog.Icon status="danger">
+                        <RotateCcw className="size-5" />
+                      </AlertDialog.Icon>
+                      <AlertDialog.Heading>Reset all course progress?</AlertDialog.Heading>
+                    </AlertDialog.Header>
+                    <AlertDialog.Body>
+                      <p className="text-sm text-gray-600 dark:text-slate-300">
+                        Are you sure you want to reset all your completed courses and stages for this learning path? All progress will reset to 0% and cannot be undone.
+                      </p>
+                    </AlertDialog.Body>
+                    <AlertDialog.Footer>
+                      <button
+                        type="button"
+                        slot="close"
+                        className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        slot="close"
+                        onClick={handleResetProgress}
+                        className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+                      >
+                        Reset All Progress
+                      </button>
+                    </AlertDialog.Footer>
+                  </AlertDialog.Dialog>
+                </AlertDialog.Container>
+              </AlertDialog.Backdrop>
+            </AlertDialog>
           </div>
         </DashboardCard>
       )}
