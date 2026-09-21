@@ -11,6 +11,8 @@ import settingsRoutes from './routes/settings.js';
 import activityRoutes from './routes/activity.js';
 import connectDB from './config/db.js';
 import { autoSeedDatabase, engineeringCourses } from './config/seedDatabase.js';
+import { buildCourseEmbeddings, isReady as embeddingsReady } from './services/embeddingService.js';
+import Course from './models/Course.js';
 
 dotenv.config();
 
@@ -27,6 +29,15 @@ app.use(async (req, res, next) => {
   try {
     await connectDB();
     await autoSeedDatabase();
+
+    // Build course embeddings if not yet ready (runs once per cold start)
+    if (!embeddingsReady()) {
+      const courses = await Course.find({});
+      if (courses.length > 0) {
+        await buildCourseEmbeddings(courses);
+      }
+    }
+
     next();
   } catch (err) {
     return res.status(500).json({ 
@@ -44,6 +55,9 @@ app.get('/api/health', (req, res) => {
 app.post('/api/seed', async (req, res) => {
   try {
     await autoSeedDatabase();
+    // Rebuild embeddings after seeding
+    const courses = await Course.find({});
+    await buildCourseEmbeddings(courses);
     res.json({ message: 'Database seeded successfully', coursesCount: engineeringCourses.length });
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -2,7 +2,6 @@ import express from 'express';
 import { protect } from '../middleware/auth.js';
 import Course from '../models/Course.js';
 import Enrollment from '../models/Enrollment.js';
-import yts from 'yt-search';
 
 const router = express.Router();
 
@@ -87,34 +86,16 @@ function pickFallbackVideos(course) {
 }
 
 // ── GET /api/learner/videos/:courseId ──────────────────────────────────
+// Pure DB read: No live outbound YouTube requests are made during request handling.
+// If courses were not yet populated by the batch script, in-memory fallback is used.
 router.get('/videos/:courseId', protect, async (req, res) => {
   try {
     const course = await Course.findById(req.params.courseId);
     if (!course) return res.status(404).json({ message: 'Course not found' });
 
-    // Populate cache if empty
-    if (!course.videos || course.videos.length === 0) {
-      try {
-        const query = `${course.title} tutorial`;
-        const searchResult = await yts(query);
-        const fetchedVideos = searchResult.videos.slice(0, 3).map(v => ({
-          videoId: v.videoId,
-          title: v.title,
-          thumbnail: v.thumbnail,
-          channel: v.author.name
-        }));
-        
-        if (fetchedVideos.length > 0) {
-          course.videos = fetchedVideos;
-        } else {
-          course.videos = pickFallbackVideos(course);
-        }
-      } catch (err) {
-        console.error('yt-search failed, using fallbacks:', err);
-        course.videos = pickFallbackVideos(course);
-      }
-      await course.save();
-    }
+    const courseVideos = (course.videos && course.videos.length > 0)
+      ? course.videos
+      : pickFallbackVideos(course);
 
     // Get user's enrollment to check completed videos
     const enrollment = await Enrollment.findOne({
@@ -124,7 +105,7 @@ router.get('/videos/:courseId', protect, async (req, res) => {
 
     const completedSet = new Set(enrollment?.completedVideos || []);
 
-    const videos = course.videos.map(v => ({
+    const videos = courseVideos.map(v => ({
       videoId: v.videoId,
       title: v.title,
       thumbnail: v.thumbnail,
@@ -188,4 +169,5 @@ router.put('/videos/complete', protect, async (req, res) => {
   }
 });
 
+export { VIDEO_FALLBACKS, pickFallbackVideos };
 export default router;

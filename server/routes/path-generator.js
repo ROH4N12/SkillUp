@@ -2,14 +2,22 @@ import express from 'express';
 import { protect } from '../middleware/auth.js';
 import Course from '../models/Course.js';
 import LearningPath from '../models/LearningPath.js';
+import { rankCoursesByGoal, isReady as embeddingsReady } from '../services/embeddingService.js';
 
 const router = express.Router();
 
 // ═══════════════════════════════════════════════════════════════════════
-// DOMAIN ALIAS MAP — maps common user goals to the exact domain string
-// used in the Course collection.  If a goal doesn't match any alias we
-// fall back to fuzzy matching, but ONLY within the best-matched domain.
+// ⚠️  DEPRECATED — DOMAIN_ALIASES & resolveDomain / scoreCourseInDomain
 // ═══════════════════════════════════════════════════════════════════════
+// The functions below are the LEGACY recommendation system that required
+// every user goal to map to a fixed domain via hardcoded aliases.
+// They are kept here intentionally so old-vs-new behavior can be compared
+// side by side (see server/scripts/compare-recommendations.js).
+//
+// The ACTIVE recommendation pipeline is the semantic embedding system
+// starting at the POST /generate-path handler further below.
+// ═══════════════════════════════════════════════════════════════════════
+
 const DOMAIN_ALIASES = {
   // Frontend
   'frontend':             'Frontend Development',
@@ -87,7 +95,7 @@ const DOMAIN_ALIASES = {
   'mobile app':           'Mobile Development',
 };
 
-// Stage size limits
+// Stage size limits (unchanged)
 const STAGE_LIMITS = {
   Foundation:        4,   // max 4
   'Core Skills':     5,   // max 5
@@ -96,9 +104,10 @@ const STAGE_LIMITS = {
 const MAX_TOTAL = 12;
 
 // ═══════════════════════════════════════════════════════════════════════
-// Resolve user goal → exact domain string
+// DEPRECATED — Resolve user goal → exact domain string
 // ═══════════════════════════════════════════════════════════════════════
-function resolveDomain(goal) {
+/** @deprecated Use semantic embedding pipeline instead */
+export function resolveDomain(goal) {
   const goalLower = goal.toLowerCase().trim();
 
   // 1. Direct alias lookup
@@ -116,10 +125,10 @@ function resolveDomain(goal) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Score a course WITHIN its already-matched domain.  This score is used
-// only to rank courses; irrelevant courses are already excluded.
+// DEPRECATED — Score a course WITHIN its already-matched domain.
 // ═══════════════════════════════════════════════════════════════════════
-function scoreCourseInDomain(course, goal, level, knownSkills) {
+/** @deprecated Use semantic re-ranking instead */
+export function scoreCourseInDomain(course, goal, level, knownSkills) {
   let score = 10; // base score — every domain-matched course starts relevant
   const goalLower = goal.toLowerCase();
   const titleLower = (course.title || '').toLowerCase();
@@ -202,7 +211,40 @@ function deduplicateCourses(scoredCourses) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// POST /generate-path
+// SEMANTIC RE-RANKING — applies level & skill-gap bonuses on top of the
+// raw cosine-similarity score from the embedding engine.
+// ═══════════════════════════════════════════════════════════════════════
+function semanticRerank(course, similarity, level, knownSkills) {
+  let score = similarity; // base = cosine similarity (0..1)
+
+  const courseLevel = (course.level || course.difficulty || '').toLowerCase();
+  const courseSkills = (course.skills || []).map(s => s.toLowerCase());
+  const knownLower = (knownSkills || []).map(s => s.toLowerCase().trim());
+
+  // Level alignment bonus (+0.15 if user's declared level matches course level)
+  if (courseLevel === (level || '').toLowerCase()) {
+    score += 0.15;
+  }
+
+  // Skill gap bonus: +0.05 per skill the user does NOT yet know
+  for (const skill of courseSkills) {
+    if (!knownLower.some(k => k.includes(skill) || skill.includes(k))) {
+      score += 0.05;
+    }
+  }
+
+  // Known-skill penalty: -0.05 per skill user already has
+  for (const skill of courseSkills) {
+    if (knownLower.some(k => k.includes(skill) || skill.includes(k))) {
+      score -= 0.05;
+    }
+  }
+
+  return score;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// POST /generate-path  (NEW — embedding-based semantic pipeline)
 // ═══════════════════════════════════════════════════════════════════════
 router.post('/generate-path', protect, async (req, res) => {
   try {
@@ -212,37 +254,43 @@ router.post('/generate-path', protect, async (req, res) => {
       return res.status(400).json({ message: 'Please provide a learning goal.' });
     }
 
-    // ─── Step 1: Resolve goal → domain ──────────────────────────────
-    const resolvedDomain = resolveDomain(goal);
-
-    if (!resolvedDomain) {
-      return res.status(200).json({
-        message: `Could not identify a domain for "${goal}". Please try a specific domain like "Frontend Development", "Data Science", "Machine Learning", "Cybersecurity", "Backend Development", "Cloud Computing", "UI/UX Design", or "Mobile Development".`,
-        path: null
+    // ─── Step 1: Semantic ranking across ALL courses ────────────────
+    if (!embeddingsReady()) {
+      // Embeddings haven't been built yet (edge case on very first request)
+      return res.status(503).json({
+        message: 'The recommendation engine is still warming up. Please try again in a few seconds.',
+        path: null,
       });
     }
 
-    // ─── Step 2: Strict domain filter — only exact-match courses ────
-    const domainCourses = await Course.find({ domain: resolvedDomain });
+    const rankings = await rankCoursesByGoal(goal);
 
-    if (domainCourses.length < 2) {
-      return res.status(200).json({
-        message: `Not enough courses available for "${resolvedDomain}". Please contact an administrator to add more courses for this domain.`,
-        path: null
-      });
+    // ─── Step 2: Fetch all course documents in a single query ───────
+    const allCourses = await Course.find({});
+    const courseMap = new Map();
+    for (const c of allCourses) {
+      courseMap.set(c._id.toString(), c);
     }
 
-    // ─── Step 3: Score within the domain ────────────────────────────
-    const scored = domainCourses.map(course => ({
-      course,
-      score: scoreCourseInDomain(course, goal, level, knownSkills)
-    })).sort((a, b) => {
-      // Primary: level order (beginner → intermediate → advanced)
-      const levelDiff = getLevelOrder(a.course) - getLevelOrder(b.course);
-      if (levelDiff !== 0) return levelDiff;
-      // Secondary: higher score first
-      return b.score - a.score;
-    });
+    // ─── Step 3: Re-rank with level & skill-gap bonuses ─────────────
+    const scored = rankings
+      .map(({ courseId, similarity }) => {
+        const course = courseMap.get(courseId);
+        if (!course) return null;
+        return {
+          course,
+          score: semanticRerank(course, similarity, level, knownSkills),
+          similarity, // keep raw similarity for debugging
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => {
+        // Primary: level order (beginner → intermediate → advanced)
+        const levelDiff = getLevelOrder(a.course) - getLevelOrder(b.course);
+        if (levelDiff !== 0) return levelDiff;
+        // Secondary: higher re-ranked score first
+        return b.score - a.score;
+      });
 
     // ─── Step 4: Deduplicate similar courses ────────────────────────
     const deduped = deduplicateCourses(scored);
@@ -275,16 +323,24 @@ router.post('/generate-path', protect, async (req, res) => {
     if (core.length > 0)       stages.push({ stageName: 'Core Skills', courses: core });
     if (advanced.length > 0)   stages.push({ stageName: 'Advanced Topics', courses: advanced });
 
-    // ─── Step 7: Upsert the learning path ───────────────────────────
-    const pathTitle = `${resolvedDomain} Learning Path`;
-    const pathDescription = `Personalized ${resolvedDomain} roadmap generated for ${level || 'all'} level.`;
+    // ─── Step 7: Determine descriptive title ────────────────────────
+    // Use the dominant domain from the top-ranked courses for the title
+    const topDomains = deduped.slice(0, 5).map(d => d.course.domain);
+    const domainFreq = {};
+    for (const d of topDomains) domainFreq[d] = (domainFreq[d] || 0) + 1;
+    const dominantDomain = Object.entries(domainFreq)
+      .sort((a, b) => b[1] - a[1])[0]?.[0] || 'Custom';
 
+    const pathTitle = `${dominantDomain} Learning Path`;
+    const pathDescription = `Personalized ${dominantDomain} roadmap generated for ${level || 'all'} level.`;
+
+    // ─── Step 8: Upsert the learning path ───────────────────────────
     let existingPath = await LearningPath.findOne({ user: req.user._id });
 
     if (existingPath) {
       existingPath.title = pathTitle;
       existingPath.description = pathDescription;
-      existingPath.goal = resolvedDomain;
+      existingPath.goal = dominantDomain;
       existingPath.level = level;
       existingPath.knownSkills = knownSkills || [];
       existingPath.stages = stages;
@@ -295,7 +351,7 @@ router.post('/generate-path', protect, async (req, res) => {
         user: req.user._id,
         title: pathTitle,
         description: pathDescription,
-        goal: resolvedDomain,
+        goal: dominantDomain,
         level,
         knownSkills: knownSkills || [],
         stages,
@@ -303,7 +359,7 @@ router.post('/generate-path', protect, async (req, res) => {
       });
     }
 
-    // ─── Step 8: Return populated path ──────────────────────────────
+    // ─── Step 9: Return populated path ──────────────────────────────
     const populated = await LearningPath.findById(existingPath._id)
       .populate('stages.courses')
       .populate('courses');
@@ -315,4 +371,5 @@ router.post('/generate-path', protect, async (req, res) => {
   }
 });
 
+export { DOMAIN_ALIASES };
 export default router;
