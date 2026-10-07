@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { VideoPlayerWindow } from "../components/ui/VideoPlayerWindow";
-import { DashboardCard } from "../components/DashboardCard";
+import { GlassCard } from "../components/ui/GlassCard";
+import { ThemeToggle } from "../components/ui/ThemeToggle";
 import { Youtube, Play, CheckCircle2 } from "lucide-react";
 
 /**
@@ -62,23 +63,26 @@ export default function TestVideoPlayer() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 p-6 sm:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50/50 via-slate-50 to-purple-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/40 p-6 sm:p-10 transition-colors">
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            🎬 VideoPlayerWindow — Test Page
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Click any video card below to open the player window. No backend
-            required.
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              🎬 VideoPlayerWindow — Test Page
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
+              Click any video card below to open the frosted glass player window.
+            </p>
+          </div>
+          <ThemeToggle variant="switch" />
         </div>
 
         {/* Video List */}
-        <DashboardCard
+        <GlassCard
+          variant="elevated"
           title="Mock Course: React Fundamentals"
-          subtitle="4 videos — click any to test the player"
+          subtitle="4 videos — click any to test the glassmorphic player"
         >
           <div className="space-y-3">
             {videos.map((video, idx) => (
@@ -148,7 +152,7 @@ export default function TestVideoPlayer() {
               </div>
             ))}
           </div>
-        </DashboardCard>
+        </GlassCard>
 
         <p className="text-xs text-center text-gray-400 dark:text-gray-500">
           Keyboard: <kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-slate-700 rounded text-[10px] font-mono">ESC</kbd> close · 
