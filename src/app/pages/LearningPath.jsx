@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { DashboardCard } from "../components/DashboardCard";
 import { ProgressBar } from "../components/ProgressBar";
 import { 
@@ -25,6 +25,7 @@ import { Modal } from "../components/ui/Modal";
 import { Skeleton, SkeletonMetrics, SkeletonChart, SkeletonCourse } from "../components/ui/Skeleton";
 import { AccordionContent } from "../components/ui/AccordionContent";
 import { AlertDialog } from "../components/ui/HeroUIAlertDialog";
+import { VideoPlayerWindow } from "../components/ui/VideoPlayerWindow";
 import { RotateCcw, Trash2 } from "lucide-react";
 
 
@@ -44,6 +45,11 @@ export default function LearningPath() {
   const [expandedCourse, setExpandedCourse] = useState(null);
   const [courseVideos, setCourseVideos] = useState({});
   const [loadingVideos, setLoadingVideos] = useState(null);
+
+  // Video Player Window state
+  const [playerOpen, setPlayerOpen] = useState(false);
+  const [playerCourseId, setPlayerCourseId] = useState(null);
+  const [playerVideoIdx, setPlayerVideoIdx] = useState(0);
 
   const generationStages = [
     "Analyzing learning goal...",
@@ -195,6 +201,31 @@ export default function LearningPath() {
     }
   };
 
+  // ── Video Player helpers ─────────────────────────────────────────────
+  const openVideoPlayer = useCallback((courseId, videoIdx) => {
+    setPlayerCourseId(courseId);
+    setPlayerVideoIdx(videoIdx);
+    setPlayerOpen(true);
+  }, []);
+
+  const closeVideoPlayer = useCallback(() => {
+    setPlayerOpen(false);
+  }, []);
+
+  const navigateVideo = useCallback((direction) => {
+    if (!playerCourseId || !courseVideos[playerCourseId]) return;
+    const videos = courseVideos[playerCourseId];
+    setPlayerVideoIdx(prev => {
+      if (direction === 'prev') return Math.max(0, prev - 1);
+      if (direction === 'next') return Math.min(videos.length - 1, prev + 1);
+      return prev;
+    });
+  }, [playerCourseId, courseVideos]);
+
+  // Derive current player video from state
+  const playerVideos = playerCourseId ? (courseVideos[playerCourseId] || []) : [];
+  const currentPlayerVideo = playerVideos[playerVideoIdx] || null;
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -218,6 +249,11 @@ export default function LearningPath() {
   const totalCourses = allCourses.length;
   const completedCourses = allCourses.filter(c => c.status === "Completed").length;
   const overallProgress = totalCourses ? Math.round((completedCourses / totalCourses) * 100) : 0;
+
+  // Find the course title for the player header (must be after allCourses)
+  const playerCourseTitle = playerCourseId
+    ? allCourses.find(c => c._id === playerCourseId)?.title || ''
+    : '';
 
   // Build the roadmap from stages
   const dynamicRoadmap = stages.map(stage => {
@@ -600,31 +636,32 @@ export default function LearningPath() {
                               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
                                 📺 Recommended Videos — watch & mark complete to track progress
                               </p>
-                              {courseVideos[course._id].map((video) => (
+                              {courseVideos[course._id].map((video, videoIdx) => (
                                 <div
                                   key={video.videoId}
-                                  className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                                  className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
                                     video.completed
                                       ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/20 border-green-200 dark:border-green-800 dark:border-green-800'
                                       : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700'
-                                  }`}
+                                  } hover:shadow-md hover:-translate-y-0.5`}
+                                  onClick={() => openVideoPlayer(course._id, videoIdx)}
+                                  role="button"
+                                  tabIndex={0}
+                                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openVideoPlayer(course._id, videoIdx); } }}
                                 >
                                   {/* Thumbnail */}
-                                  <a
-                                    href={`https://www.youtube.com/watch?v=${video.videoId}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex-shrink-0 relative group"
-                                  >
+                                  <div className="flex-shrink-0 relative group">
                                     <img
                                       src={video.thumbnail}
                                       alt={video.title}
                                       className="w-28 h-16 object-cover rounded-md"
                                     />
-                                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 rounded-md flex items-center justify-center transition-colors">
-                                      <Play className="w-6 h-6 text-white fill-white" />
+                                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 rounded-md flex items-center justify-center transition-colors">
+                                      <div className="w-9 h-9 rounded-full bg-white/90 dark:bg-white/80 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                        <Play className="w-4 h-4 text-gray-900 fill-gray-900 ml-0.5" />
+                                      </div>
                                     </div>
-                                  </a>
+                                  </div>
 
                                   {/* Info */}
                                   <div className="flex-1 min-w-0">
@@ -636,17 +673,8 @@ export default function LearningPath() {
 
                                   {/* Actions */}
                                   <div className="flex items-center gap-2 flex-shrink-0">
-                                    <a
-                                      href={`https://www.youtube.com/watch?v=${video.videoId}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="p-1.5 rounded-md text-indigo-700 dark:text-indigo-300 dark:text-indigo-300 dark:text-indigo-400 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/30 transition-colors active:scale-90"
-                                      title="Watch on YouTube"
-                                    >
-                                      <ExternalLink className="w-4 h-4" />
-                                    </a>
                                     <button
-                                      onClick={() => toggleVideoComplete(course._id, video.videoId, video.completed)}
+                                      onClick={(e) => { e.stopPropagation(); toggleVideoComplete(course._id, video.videoId, video.completed); }}
                                       className={`p-1.5 rounded-md transition-all active:scale-90 ${
                                         video.completed
                                           ? 'text-green-700 dark:text-green-300 dark:text-green-300 bg-green-100 dark:bg-green-900/40 hover:bg-green-200'
@@ -786,6 +814,22 @@ export default function LearningPath() {
           </div>
         </div>
       </DashboardCard>
+
+      {/* ── Video Player Window ── */}
+      <VideoPlayerWindow
+        video={currentPlayerVideo}
+        isOpen={playerOpen}
+        onClose={closeVideoPlayer}
+        onToggleComplete={(videoId, currentlyCompleted) => {
+          if (playerCourseId) {
+            toggleVideoComplete(playerCourseId, videoId, currentlyCompleted);
+          }
+        }}
+        onNavigate={navigateVideo}
+        hasPrev={playerVideoIdx > 0}
+        hasNext={playerVideoIdx < playerVideos.length - 1}
+        courseTitle={playerCourseTitle}
+      />
     </div>
   );
 }

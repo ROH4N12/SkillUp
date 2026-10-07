@@ -15,6 +15,7 @@ const Alerts = lazy(() => import("./pages/Alerts"));
 const CounselorDashboard = lazy(() => import("./pages/CounselorDashboard"));
 const TrainerDashboard = lazy(() => import("./pages/TrainerDashboard"));
 const Settings = lazy(() => import("./pages/Settings"));
+const TestVideoPlayer = lazy(() => import("./pages/TestVideoPlayer"));
 
 // Shared loading fallback — minimal spinner that doesn't flash for fast loads
 function PageLoader() {
@@ -41,6 +42,10 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     element: <LazyRoute><Login /></LazyRoute>,
+  },
+  {
+    path: "/test-video-player",
+    element: <LazyRoute><TestVideoPlayer /></LazyRoute>,
   },
 
   {
