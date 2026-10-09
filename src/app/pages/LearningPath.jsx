@@ -40,7 +40,7 @@ export default function LearningPath() {
   const [generating, setGenerating] = useState(false);
   const [generationStep, setGenerationStep] = useState(0);
   const [genError, setGenError] = useState('');
-  const [formData, setFormData] = useState({ goal: '', level: 'Beginner', knownSkills: '' });
+  const [formData, setFormData] = useState({ goal: '' });
   const [actionLoadingCourse, setActionLoadingCourse] = useState(null);
 
   // Video expansion state
@@ -120,9 +120,9 @@ export default function LearningPath() {
 
     try {
       const result = await apiCall('/api/learner/generate-path', 'POST', {
-        goal: formData.goal,
-        level: formData.level,
-        knownSkills: formData.knownSkills.split(',').map(s => s.trim()).filter(Boolean)
+        goal: formData.goal.trim(),
+        level: 'Beginner',
+        knownSkills: []
       });
 
       clearInterval(stepInterval);
@@ -133,7 +133,7 @@ export default function LearningPath() {
         setGenerationStep(generationStages.length - 1);
         setTimeout(() => {
           setShowModal(false);
-          setFormData({ goal: '', level: 'Beginner', knownSkills: '' });
+          setFormData({ goal: '' });
           toast.success("Learning path generated successfully!");
           refetch({ silent: true });
           refetchDashboard({ silent: true });
@@ -384,42 +384,46 @@ export default function LearningPath() {
         </div>
       </div>
 
-      {/* Customize Path Modal with Intentional Backend Stages */}
+      {/* Customize Path Modal with Glassmorphism & Adaptive AI Engine */}
       <Modal
         isOpen={showModal}
         onClose={() => { if (!generating) { setShowModal(false); setGenError(''); } }}
-        title="Generate Learning Path"
-        subtitle="Enter your target engineering goal and we'll build a tailored curriculum"
+        title="Generate AI Learning Path"
+        subtitle="Specify your target career goal or technical discipline to build an adaptive curriculum"
+        maxWidth="max-w-xl"
       >
         {generating ? (
           <div className="py-6 space-y-5">
-            <div className="text-center space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto">
-                <Sparkles className="w-6 h-6 animate-pulse" />
+            <div className="text-center space-y-2.5">
+              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-purple-500/30">
+                <Sparkles className="w-7 h-7 animate-pulse" />
+                <div className="absolute inset-0 rounded-2xl border border-white/40 animate-ping opacity-25" />
               </div>
-              <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-base">Creating Your Roadmap</h4>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Please wait while the AI curriculum engine crafts your path</p>
+              <h4 className="font-bold text-gray-900 dark:text-white text-base tracking-tight">Crafting Your Personalized Roadmap</h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+                Analyzing required skills, sequencing prerequisite modules, and fetching curated tutorial sessions...
+              </p>
             </div>
 
-            <div className="bg-gray-50 dark:bg-slate-700/40 rounded-xl p-4 space-y-3 border border-gray-100 dark:border-slate-700">
+            <div className="glass-default rounded-2xl p-4.5 space-y-3 border border-white/40 dark:border-white/10 shadow-sm backdrop-blur-xl">
               {generationStages.map((stage, idx) => {
                 const isPassed = idx < generationStep;
                 const isCurrent = idx === generationStep;
                 return (
                   <div key={idx} className="flex items-center gap-3 text-xs transition-colors duration-200">
                     {isPassed ? (
-                      <div className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 flex items-center justify-center flex-shrink-0">
-                        <Check className="w-3 h-3" />
+                      <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                        <Check className="w-3 h-3 stroke-[2.5]" />
                       </div>
                     ) : isCurrent ? (
-                      <div className="w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0">
-                        <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      <div className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30 flex items-center justify-center flex-shrink-0">
+                        <div className="w-2.5 h-2.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                       </div>
                     ) : (
-                      <div className="w-5 h-5 rounded-full border border-gray-300 dark:border-slate-600 flex-shrink-0" />
+                      <div className="w-5 h-5 rounded-full border border-gray-300/80 dark:border-slate-700 flex-shrink-0" />
                     )}
                     <span className={`
-                      ${isCurrent ? "font-semibold text-purple-700 dark:text-purple-300" : isPassed ? "text-gray-700 dark:text-gray-300" : "text-gray-400 dark:text-gray-500"}
+                      ${isCurrent ? "font-semibold text-purple-700 dark:text-purple-300" : isPassed ? "text-gray-800 dark:text-gray-200" : "text-gray-400 dark:text-gray-500"}
                     `}>
                       {stage}
                     </span>
@@ -429,61 +433,109 @@ export default function LearningPath() {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleGeneratePath} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider">
-                Target Goal *
+          <form onSubmit={handleGeneratePath} className="space-y-4.5 pt-1">
+            {/* Target Goal Input with Glowing Glass Container */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                Target Career Goal or Discipline *
               </label>
-              <input
-                type="text"
-                required
-                value={formData.goal}
-                onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
-                placeholder="e.g. Frontend Development, Data Science, Cloud Engineering..."
-                className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
-              />
-              <p className="text-[11px] text-gray-400 mt-1">Recommended: Frontend, Backend, Data Science, ML, Cloud, Cybersecurity</p>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-purple-500/20 to-indigo-500/20 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shadow-xs">
+                    <Sparkles className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  required
+                  value={formData.goal}
+                  onChange={(e) => {
+                    setFormData({ goal: e.target.value });
+                    if (genError) setGenError('');
+                  }}
+                  placeholder="e.g. Generative AI Engineer, Full Stack Developer, Rust Systems..."
+                  className="w-full pl-12 pr-10 py-3 border border-gray-200/90 dark:border-white/10 rounded-xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm font-medium focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 outline-none transition-all shadow-xs"
+                />
+                {formData.goal && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ goal: '' })}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider">
-                Current Level
-              </label>
-              <select
-                value={formData.level}
-                onChange={(e) => setFormData({ ...formData, level: e.target.value })}
-                className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
-              >
-                <option value="Beginner">Beginner (Foundational principles)</option>
-                <option value="Intermediate">Intermediate (Real-world applications)</option>
-                <option value="Advanced">Advanced (Architecture & optimization)</option>
-              </select>
+            {/* Quick Track Suggestions (Glass Pills / Trending Chips) */}
+            <div className="space-y-2 pt-0.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="uppercase tracking-wider text-[11px] font-bold text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                  <Target className="w-3.5 h-3.5 text-purple-500" />
+                  Popular & Trending Tracks
+                </span>
+                <span className="text-[11px] text-purple-600 dark:text-purple-400 font-medium">Click to select</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { label: "⚡ Generative AI & LLMOps", value: "Generative AI & LLMOps" },
+                  { label: "🌐 Full Stack Web", value: "Full Stack Development" },
+                  { label: "🦀 Rust Systems", value: "Systems Programming with Rust" },
+                  { label: "🤖 Robotics & ROS 2", value: "Robotics & Autonomous Systems" },
+                  { label: "🛡️ Cybersecurity", value: "Cybersecurity" },
+                  { label: "☁️ Cloud & SRE", value: "Site Reliability Engineering" },
+                  { label: "🎯 DSA & Placement", value: "Career & Placement Readiness" },
+                  { label: "🧠 Machine Learning", value: "Machine Learning" },
+                  { label: "🎨 UI/UX Design", value: "UI/UX Design" },
+                  { label: "📊 Data Engineering", value: "Data Engineering" },
+                ].map((track) => {
+                  const isSelected = formData.goal.toLowerCase() === track.value.toLowerCase();
+                  return (
+                    <button
+                      key={track.value}
+                      type="button"
+                      onClick={() => {
+                        setFormData({ goal: track.value });
+                        if (genError) setGenError('');
+                      }}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer backdrop-blur-md active:scale-95 border ${
+                        isSelected
+                          ? "bg-purple-600 text-white border-purple-500 shadow-sm shadow-purple-500/30"
+                          : "bg-white/60 dark:bg-white/5 hover:bg-white/90 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 border-gray-200/80 dark:border-white/10 hover:border-purple-300 dark:hover:border-purple-500/40"
+                      }`}
+                    >
+                      {track.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider">
-                Known Skills (Optional)
-              </label>
-              <input
-                type="text"
-                value={formData.knownSkills}
-                onChange={(e) => setFormData({ ...formData, knownSkills: e.target.value })}
-                placeholder="e.g. Python, JavaScript, HTML (comma separated)"
-                className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
-              />
+            {/* Adaptive 3-Stage Curriculum Info Badge */}
+            <div className="p-3.5 rounded-xl bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-transparent border border-purple-500/20 dark:border-purple-500/20 backdrop-blur-md space-y-1">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                <span className="text-xs font-semibold text-purple-900 dark:text-purple-200">
+                  Adaptive Multi-Stage Architecture
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-600 dark:text-slate-300 leading-relaxed">
+                SkillUp's semantic AI automatically sequences your roadmap into <b>Foundation</b>, <b>Core Skills</b>, and <b>Advanced Topics</b> with verified video tutorials.
+              </p>
             </div>
 
             {genError && (
-              <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300">
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300 backdrop-blur-md">
                 <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <span>{genError}</span>
               </div>
             )}
 
-            <div className="pt-2 flex justify-end gap-2">
+            <div className="pt-2 flex justify-end items-center gap-2.5">
               <Button
                 variant="secondary"
-                onClick={() => setShowModal(false)}
+                onClick={() => { setShowModal(false); setGenError(''); }}
               >
                 Cancel
               </Button>
@@ -491,6 +543,7 @@ export default function LearningPath() {
                 type="submit"
                 variant="primary"
                 icon={Sparkles}
+                disabled={!formData.goal.trim()}
               >
                 Generate Path
               </Button>

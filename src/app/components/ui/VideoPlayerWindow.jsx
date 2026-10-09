@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
   X,
@@ -10,20 +10,23 @@ import {
   ChevronLeft,
   ChevronRight,
   Play,
+  Sparkles,
+  CheckCheck,
 } from "lucide-react";
 
 /**
- * VideoPlayerWindow — A rich, modal-style panel that embeds a YouTube player,
- * shows extracted video metadata, and includes a mark-complete toggle.
+ * VideoPlayerWindow — A rich, frosted glass modal panel that embeds a YouTube player,
+ * displays parsed video metadata, detects when video playback ends to automatically mark
+ * the lesson complete, and includes the manual toggle button alongside it.
  *
  * Props:
- *  - video          : { videoId, title, thumbnail, channel, completed }
- *  - isOpen         : boolean
- *  - onClose        : () => void
+ *  - video            : { videoId, title, thumbnail, channel, completed }
+ *  - isOpen           : boolean
+ *  - onClose          : () => void
  *  - onToggleComplete : (videoId, currentlyCompleted) => void
- *  - onNavigate     : (direction: 'prev' | 'next') => void   (optional)
- *  - hasPrev / hasNext : booleans for navigation arrows        (optional)
- *  - courseTitle     : string (the parent course title for context)
+ *  - onNavigate       : (direction: 'prev' | 'next') => void   (optional)
+ *  - hasPrev / hasNext: booleans for navigation arrows        (optional)
+ *  - courseTitle      : string (the parent course title for context)
  */
 export function VideoPlayerWindow({
   video,
@@ -37,15 +40,159 @@ export function VideoPlayerWindow({
 }) {
   const [mounted, setMounted] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [autoCompletedNotice, setAutoCompletedNotice] = useState(false);
+
+  const iframeRef = useRef(null);
+  const playerInstanceRef = useRef(null);
+  const hasAutoCompletedRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Reset iframe loaded state when video changes
+  // Ensure YouTube IFrame API script is available
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.YT && window.YT.Player) return;
+
+    if (!document.getElementById("yt-iframe-api-script")) {
+      const script = document.createElement("script");
+      script.id = "yt-iframe-api-script";
+      script.src = "https://www.youtube.com/iframe_api";
+      script.async = true;
+      document.head.appendChild(script);
+    }
+  }, []);
+
+  // Reset video player states when switching to a different video
   useEffect(() => {
     setIframeLoaded(false);
+    setAutoCompletedNotice(false);
+    hasAutoCompletedRef.current = false;
   }, [video?.videoId]);
+
+  // Handler invoked when the video reaches the end
+  const handleVideoEnded = useCallback(() => {
+    if (!video) return;
+
+    if (!video.completed && !hasAutoCompletedRef.current) {
+      hasAutoCompletedRef.current = true;
+      setAutoCompletedNotice(true);
+      if (typeof onToggleComplete === "function") {
+        // onToggleComplete expects (videoId, currentlyCompleted)
+        // passing false toggles it to true (completed)
+        onToggleComplete(video.videoId, false);
+      }
+    }
+  }, [video, onToggleComplete]);
+
+  // Set up official YouTube Player API listener
+  useEffect(() => {
+    if (!isOpen || !video?.videoId) return;
+
+    let isSubscribed = true;
+
+    const setupPlayer = () => {
+      if (!isSubscribed || !iframeRef.current || !window.YT || !window.YT.Player) return;
+
+      try {
+        if (playerInstanceRef.current && typeof playerInstanceRef.current.destroy === "function") {
+          try {
+            playerInstanceRef.current.destroy();
+          } catch (_) {}
+        }
+
+        playerInstanceRef.current = new window.YT.Player(iframeRef.current, {
+          events: {
+            onStateChange: (event) => {
+              // 0 represents YT.PlayerState.ENDED
+              if (event.data === 0) {
+                handleVideoEnded();
+              }
+            },
+          },
+        });
+      } catch (err) {
+        console.debug("YouTube player API initialization notice:", err);
+      }
+    };
+
+    if (window.YT && window.YT.Player) {
+      setupPlayer();
+    } else {
+      const intervalId = setInterval(() => {
+        if (window.YT && window.YT.Player) {
+          clearInterval(intervalId);
+          setupPlayer();
+        }
+      }, 400);
+
+      return () => {
+        isSubscribed = false;
+        clearInterval(intervalId);
+        if (playerInstanceRef.current && typeof playerInstanceRef.current.destroy === "function") {
+          try {
+            playerInstanceRef.current.destroy();
+          } catch (_) {}
+        }
+      };
+    }
+
+    return () => {
+      isSubscribed = false;
+      if (playerInstanceRef.current && typeof playerInstanceRef.current.destroy === "function") {
+        try {
+          playerInstanceRef.current.destroy();
+        } catch (_) {}
+      }
+    };
+  }, [isOpen, video?.videoId, iframeLoaded, handleVideoEnded]);
+
+  // Secondary layer: window message listener for YouTube postMessage events
+  useEffect(() => {
+    if (!isOpen || !video?.videoId) return;
+
+    const handleMessage = (event) => {
+      try {
+        const payload =
+          typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+        if (!payload) return;
+
+        // Both direct onStateChange and infoDelivery emit player state 0 when ended
+        if (
+          (payload.event === "onStateChange" && payload.info === 0) ||
+          (payload.event === "infoDelivery" &&
+            payload.info &&
+            payload.info.playerState === 0)
+        ) {
+          handleVideoEnded();
+        }
+      } catch (_) {
+        // Ignore non-JSON postMessage payloads from third-party scripts or extensions
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, [isOpen, video?.videoId, handleVideoEnded]);
+
+  // When iframe loads, notify it to start listening for postMessage events
+  const handleIframeLoaded = () => {
+    setIframeLoaded(true);
+    try {
+      if (iframeRef.current && iframeRef.current.contentWindow) {
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({
+            event: "listening",
+            id: `yt-player-${video.videoId}`,
+          }),
+          "*"
+        );
+      }
+    } catch (_) {}
+  };
 
   // ESC key & scroll lock
   useEffect(() => {
@@ -71,6 +218,10 @@ export function VideoPlayerWindow({
 
   // Extract useful info from the video title
   const titleParts = parseVideoTitle(video.title);
+  const currentOrigin =
+    typeof window !== "undefined" && window.location.origin
+      ? window.location.origin
+      : "";
 
   return createPortal(
     <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
@@ -153,13 +304,18 @@ export function VideoPlayerWindow({
             </div>
           )}
           <iframe
-            src={`https://www.youtube.com/embed/${video.videoId}?rel=0&modestbranding=1`}
+            key={video.videoId}
+            id={`yt-player-${video.videoId}`}
+            ref={iframeRef}
+            src={`https://www.youtube.com/embed/${video.videoId}?enablejsapi=1&origin=${encodeURIComponent(
+              currentOrigin
+            )}&rel=0&modestbranding=1`}
             title={video.title}
             className="absolute inset-0 w-full h-full"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
-            onLoad={() => setIframeLoaded(true)}
+            onLoad={handleIframeLoaded}
           />
         </div>
 
@@ -197,7 +353,7 @@ export function VideoPlayerWindow({
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Buttons: Open on YouTube + Manual Mark Complete Button alongside */}
             <div className="flex items-center gap-2.5 flex-shrink-0 sm:pt-0.5">
               <a
                 href={`https://www.youtube.com/watch?v=${video.videoId}`}
@@ -217,6 +373,11 @@ export function VideoPlayerWindow({
                     ? "text-white bg-gradient-to-r from-emerald-600 to-green-600 border-white/30 hover:from-emerald-500 hover:to-green-500 shadow-md shadow-emerald-500/25"
                     : "text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 border-emerald-500/30 hover:bg-emerald-500/25 shadow-xs"
                 }`}
+                title={
+                  video.completed
+                    ? "Click to mark as incomplete"
+                    : "Click to mark as complete"
+                }
               >
                 <CheckCircle2 className="w-4 h-4" />
                 {video.completed ? "Completed ✓" : "Mark Complete"}
@@ -224,28 +385,60 @@ export function VideoPlayerWindow({
             </div>
           </div>
 
+          {/* Celebratory Auto-Completed Banner (Fires automatically when video reaches end) */}
+          {autoCompletedNotice && (
+            <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500/20 via-teal-500/15 to-emerald-500/10 border border-emerald-500/40 text-emerald-900 dark:text-emerald-200 shadow-sm backdrop-blur-md animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
+                </div>
+                <div className="text-xs">
+                  <span className="font-bold">Lesson Finished!</span>
+                  <span className="hidden sm:inline"> Automatically marked as completed.</span>
+                </div>
+              </div>
+              {hasNext && onNavigate && (
+                <button
+                  onClick={() => onNavigate("next")}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-lg shadow-xs transition-all active:scale-95 flex-shrink-0"
+                >
+                  <span>Next Lesson</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Frosted Status Bar */}
           <div
-            className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-xs font-medium border backdrop-blur-md transition-all ${
+            className={`flex items-center justify-between gap-2.5 px-4 py-3 rounded-xl text-xs font-medium border backdrop-blur-md transition-all ${
               video.completed
                 ? "bg-emerald-500/15 dark:bg-emerald-950/30 border-emerald-500/30 text-emerald-800 dark:text-emerald-300 shadow-xs"
                 : "bg-indigo-500/15 dark:bg-indigo-950/30 border-indigo-500/30 text-indigo-800 dark:text-indigo-300 shadow-xs"
             }`}
           >
-            {video.completed ? (
-              <>
-                <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
-                <span>
-                  You've marked this video as completed. Great progress on your learning path!
-                </span>
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4 flex-shrink-0 text-indigo-600 dark:text-indigo-400" />
-                <span>
-                  Watch the video lesson above and mark it complete to track your progress.
-                </span>
-              </>
+            <div className="flex items-center gap-2.5 min-w-0">
+              {video.completed ? (
+                <>
+                  <CheckCheck className="w-4 h-4 flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  <span className="truncate">
+                    You've completed this video lesson! Great progress on your learning path.
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4 flex-shrink-0 text-indigo-600 dark:text-indigo-400" />
+                  <span className="truncate">
+                    Watch the video above. It will automatically mark complete when finished, or click "Mark Complete" anytime.
+                  </span>
+                </>
+              )}
+            </div>
+
+            {video.completed && (
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 flex-shrink-0 border border-emerald-500/20">
+                Watched
+              </span>
             )}
           </div>
         </div>
@@ -295,3 +488,4 @@ function parseVideoTitle(title = "") {
 }
 
 export default VideoPlayerWindow;
+
