@@ -109,7 +109,7 @@ export default function LandingPage() {
         <HeroSection onGetStarted={() => navigate('/login')} />
 
         {/* Simplified Glass Tabs for 3 Roles & 1-Click Interactive Sandboxes */}
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        <div id="about" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 scroll-mt-24">
           <div className="glass-elevated rounded-3xl p-6 sm:p-8 border border-white/70 dark:border-white/10 shadow-2xl shadow-indigo-950/5 dark:shadow-black/40 backdrop-blur-2xl text-center">
 
             {/* Header Badge & Title */}
@@ -365,7 +365,7 @@ export default function LandingPage() {
       </main>
 
       {/* 3. Features Section */}
-      <section id="features" className="py-20 bg-transparent">
+      <section id="features" className="py-20 bg-transparent scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <ScrollReveal direction="up">
             <div className="text-center mb-16">
@@ -396,7 +396,7 @@ export default function LandingPage() {
       </section>
 
       {/* 4. How It Works Section */}
-      <section className="py-20 bg-transparent">
+      <section id="how-it-works" className="py-20 bg-transparent scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <ScrollReveal direction="up">
             <div className="text-center mb-16">

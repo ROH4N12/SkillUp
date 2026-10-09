@@ -34,6 +34,18 @@ const Header = ({ navigationData = [], className, onGetStarted }) => {
     if (window.innerWidth >= 768) setIsOpen(false);
   }, []);
 
+  const handleNavClick = useCallback((e, href) => {
+    if (href?.startsWith("#")) {
+      e.preventDefault();
+      const target = document.querySelector(href);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth" });
+        window.history.pushState(null, "", href);
+      }
+      setIsOpen(false);
+    }
+  }, []);
+
   useEffect(() => {
     window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("resize", handleResize);
@@ -78,8 +90,9 @@ const Header = ({ navigationData = [], className, onGetStarted }) => {
                 <NavigationMenuItem key={navItem.title}>
                   <NavigationMenuLink
                     href={navItem.href}
+                    onClick={(e) => handleNavClick(e, navItem.href)}
                     className={cn(
-                      "px-3 lg:px-4 py-1.5 text-sm font-medium rounded-full text-muted-foreground hover:text-foreground hover:bg-background/80 transition-all tracking-normal",
+                      "px-3 lg:px-4 py-1.5 text-sm font-medium rounded-full text-muted-foreground hover:text-foreground hover:bg-background/80 transition-all tracking-normal cursor-pointer",
                       navItem.isActive ? "bg-background text-foreground shadow-xs" : ""
                     )}
                   >
@@ -138,8 +151,9 @@ const Header = ({ navigationData = [], className, onGetStarted }) => {
                         <NavigationMenuItem key={item.title} className="w-full">
                           <NavigationMenuLink
                             href={item.href}
+                            onClick={(e) => handleNavClick(e, item.href)}
                             className={cn(
-                              "flex items-center text-xl font-semibold tracking-tight transition-all p-2 rounded-lg hover:bg-accent/40 w-full",
+                              "flex items-center text-xl font-semibold tracking-tight transition-all p-2 rounded-lg hover:bg-accent/40 w-full cursor-pointer",
                               item.isActive
                                 ? "text-primary"
                                 : "text-muted-foreground hover:text-foreground hover:translate-x-1"
