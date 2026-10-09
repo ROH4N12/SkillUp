@@ -14,11 +14,11 @@ export const autoSeedDatabase = async () => {
     isSeeding = true;
     const count = await Course.countDocuments();
     if (count === 0) {
-      console.log('Database empty: auto-seeding all 123 engineering courses...');
+      console.log(`Database empty: auto-seeding all ${engineeringCourses.length} engineering courses...`);
       await Course.insertMany(engineeringCourses);
       console.log(`Successfully seeded ${engineeringCourses.length} courses across all domains.`);
-    } else if (count < engineeringCourses.length) {
-      // Sync any missing courses (e.g., Game Development, Blockchain, DevOps, etc.)
+    } else {
+      // Sync any missing courses
       const existingTitles = new Set(await Course.distinct('title'));
       const missing = engineeringCourses.filter(c => !existingTitles.has(c.title));
       if (missing.length > 0) {

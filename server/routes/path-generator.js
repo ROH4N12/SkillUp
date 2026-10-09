@@ -192,6 +192,71 @@ const DOMAIN_ALIASES = {
   'flutter':                  'Mobile Development',
   'app development':          'Mobile Development',
   'mobile app':               'Mobile Development',
+
+  // Generative AI & LLMOps
+  'generative ai':            'Generative AI & LLMOps',
+  'genai':                    'Generative AI & LLMOps',
+  'llm':                      'Generative AI & LLMOps',
+  'llmops':                   'Generative AI & LLMOps',
+  'prompt engineering':       'Generative AI & LLMOps',
+  'langchain':                'Generative AI & LLMOps',
+  'rag':                      'Generative AI & LLMOps',
+  'ai agents':                'Generative AI & LLMOps',
+
+  // Computer Science Core
+  'computer science core':    'Computer Science Core',
+  'cs core':                  'Computer Science Core',
+  'discrete math':            'Computer Science Core',
+  'discrete mathematics':     'Computer Science Core',
+  'digital logic':            'Computer Science Core',
+  'computer architecture':    'Computer Science Core',
+  'theory of computation':    'Computer Science Core',
+  'automata':                 'Computer Science Core',
+  'compiler design':          'Computer Science Core',
+  'parallel computing':       'Computer Science Core',
+  'cuda':                     'Computer Science Core',
+
+  // Career & Placement Readiness
+  'career readiness':         'Career & Placement Readiness',
+  'placement':                'Career & Placement Readiness',
+  'interview prep':           'Career & Placement Readiness',
+  'dsa interview':            'Career & Placement Readiness',
+  'aptitude':                 'Career & Placement Readiness',
+  'technical interview':      'Career & Placement Readiness',
+
+  // Site Reliability Engineering
+  'site reliability engineering': 'Site Reliability Engineering',
+  'sre':                      'Site Reliability Engineering',
+  'chaos engineering':        'Site Reliability Engineering',
+  'opentelemetry':            'Site Reliability Engineering',
+
+  // Systems Programming with Rust
+  'rust':                     'Systems Programming with Rust',
+  'rust programming':         'Systems Programming with Rust',
+  'systems programming':      'Systems Programming with Rust',
+  'wasm':                     'Systems Programming with Rust',
+
+  // Embedded Systems & Electronics
+  'embedded systems':         'Embedded Systems & Electronics',
+  'embedded':                 'Embedded Systems & Electronics',
+  'electronics':              'Embedded Systems & Electronics',
+  'arm':                      'Embedded Systems & Electronics',
+  'stm32':                    'Embedded Systems & Electronics',
+  'pcb':                      'Embedded Systems & Electronics',
+  'freertos':                 'Embedded Systems & Electronics',
+
+  // Robotics & Autonomous Systems
+  'robotics':                 'Robotics & Autonomous Systems',
+  'ros':                      'Robotics & Autonomous Systems',
+  'ros 2':                    'Robotics & Autonomous Systems',
+  'autonomous systems':       'Robotics & Autonomous Systems',
+  'slam':                     'Robotics & Autonomous Systems',
+
+  // Product Management & Tech Leadership
+  'product management':       'Product Management & Tech Leadership',
+  'product manager':          'Product Management & Tech Leadership',
+  'tech leadership':          'Product Management & Tech Leadership',
+  'prd':                      'Product Management & Tech Leadership',
 };
 
 // Stage size limits (unchanged)
@@ -212,10 +277,12 @@ export function resolveDomain(goal) {
   // 1. Direct alias lookup
   if (DOMAIN_ALIASES[goalLower]) return DOMAIN_ALIASES[goalLower];
 
-  // 2. Partial alias match (longest alias first for high specificity)
+  // 2. Partial alias match with word boundaries (longest alias first)
   const sorted = Object.entries(DOMAIN_ALIASES).sort((a, b) => b[0].length - a[0].length);
   for (const [alias, domain] of sorted) {
-    if (goalLower.includes(alias) || alias.includes(goalLower)) {
+    const escaped = alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(^|\\b)${escaped}(\\b|$)`, 'i');
+    if (regex.test(goalLower)) {
       return domain;
     }
   }

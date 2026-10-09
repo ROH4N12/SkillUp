@@ -93,6 +93,37 @@ const VIDEO_FALLBACKS = {
     { videoId: 'm8Icp_Cid5o', title: 'System Design Course for Beginners', thumbnail: 'https://img.youtube.com/vi/m8Icp_Cid5o/mqdefault.jpg', channel: 'freeCodeCamp' },
     { videoId: 'bUHFg8CZFCA', title: 'System Design Interview – Step By Step Guide', thumbnail: 'https://img.youtube.com/vi/bUHFg8CZFCA/mqdefault.jpg', channel: 'ByteByteGo' },
   ],
+  'generative ai': [
+    { videoId: 'mEsleV16qdo', title: 'Generative AI Full Course – Gemini, ChatGPT, LLMs', thumbnail: 'https://img.youtube.com/vi/mEsleV16qdo/mqdefault.jpg', channel: 'freeCodeCamp' },
+    { videoId: 'jkrNckP444A', title: 'LangChain Full Course for Beginners', thumbnail: 'https://img.youtube.com/vi/jkrNckP444A/mqdefault.jpg', channel: 'freeCodeCamp' },
+  ],
+  'llm': [
+    { videoId: 'mEsleV16qdo', title: 'Generative AI Full Course – Gemini, ChatGPT, LLMs', thumbnail: 'https://img.youtube.com/vi/mEsleV16qdo/mqdefault.jpg', channel: 'freeCodeCamp' },
+    { videoId: 'jkrNckP444A', title: 'LangChain Full Course for Beginners', thumbnail: 'https://img.youtube.com/vi/jkrNckP444A/mqdefault.jpg', channel: 'freeCodeCamp' },
+  ],
+  'rust': [
+    { videoId: 'MsocPEZBd-M', title: 'Rust Programming Course for Beginners', thumbnail: 'https://img.youtube.com/vi/MsocPEZBd-M/mqdefault.jpg', channel: 'freeCodeCamp' },
+    { videoId: 'zF34dRivLOw', title: 'Rust Crash Course', thumbnail: 'https://img.youtube.com/vi/zF34dRivLOw/mqdefault.jpg', channel: 'Traversy Media' },
+  ],
+  'sre': [
+    { videoId: 'u4Y7pTq9o0c', title: 'Site Reliability Engineering (SRE) Handbook Overview', thumbnail: 'https://img.youtube.com/vi/u4Y7pTq9o0c/mqdefault.jpg', channel: 'Google Cloud Tech' },
+    { videoId: 'uK5pyd8W-4A', title: 'Introduction to SRE', thumbnail: 'https://img.youtube.com/vi/uK5pyd8W-4A/mqdefault.jpg', channel: 'IBM Technology' },
+  ],
+  'robotics': [
+    { videoId: 'g6B4P2a0e-4', title: 'ROS 2 Basics Tutorial', thumbnail: 'https://img.youtube.com/vi/g6B4P2a0e-4/mqdefault.jpg', channel: 'Articulated Robotics' },
+    { videoId: '6b6tPq2o0c8', title: 'Robotics: Kinematics and Control', thumbnail: 'https://img.youtube.com/vi/6b6tPq2o0c8/mqdefault.jpg', channel: 'Stanford Online' },
+  ],
+  'embedded': [
+    { videoId: '8aGhZQkoFbQ', title: 'Embedded Systems Programming on ARM Cortex-M', thumbnail: 'https://img.youtube.com/vi/8aGhZQkoFbQ/mqdefault.jpg', channel: 'Fastbit Embedded' },
+    { videoId: 'X9M3V3L5T-s', title: 'Microcontroller Fundamentals', thumbnail: 'https://img.youtube.com/vi/X9M3V3L5T-s/mqdefault.jpg', channel: 'GreatScott!' },
+  ],
+  'interview': [
+    { videoId: 'klL5n_F7o6g', title: 'Top Coding Interview Patterns', thumbnail: 'https://img.youtube.com/vi/klL5n_F7o6g/mqdefault.jpg', channel: 'NeetCode' },
+    { videoId: '8a-5Ijoq4i8', title: 'How to Crack the Tech Interview', thumbnail: 'https://img.youtube.com/vi/8a-5Ijoq4i8/mqdefault.jpg', channel: 'freeCodeCamp' },
+  ],
+  'product management': [
+    { videoId: '2b7tPq2o0c8', title: 'Product Management for Beginners', thumbnail: 'https://img.youtube.com/vi/2b7tPq2o0c8/mqdefault.jpg', channel: 'Product School' },
+  ],
   'default': [
     { videoId: 'PkZNo7MFNFg', title: 'Programming Fundamentals', thumbnail: 'https://img.youtube.com/vi/PkZNo7MFNFg/mqdefault.jpg', channel: 'freeCodeCamp' },
     { videoId: 'zOjov-2OZ0E', title: 'Learn to Code - Full Course', thumbnail: 'https://img.youtube.com/vi/zOjov-2OZ0E/mqdefault.jpg', channel: 'freeCodeCamp' },
