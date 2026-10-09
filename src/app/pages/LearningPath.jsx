@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { DashboardCard } from "../components/DashboardCard";
 import { ProgressBar } from "../components/ProgressBar";
 import { 
@@ -16,7 +16,12 @@ import {
   ExternalLink, 
   Youtube,
   Check,
-  X
+  X,
+  RotateCcw,
+  Trash2,
+  Loader2,
+  Cpu,
+  Layers
 } from "lucide-react";
 
 import { useFetch, apiCall } from "../hooks/useFetch";
@@ -28,7 +33,6 @@ import { Skeleton, SkeletonMetrics, SkeletonChart, SkeletonCourse } from "../com
 import { AccordionContent } from "../components/ui/AccordionContent";
 import { AlertDialog } from "../components/ui/HeroUIAlertDialog";
 import { VideoPlayerWindow } from "../components/ui/VideoPlayerWindow";
-import { RotateCcw, Trash2 } from "lucide-react";
 
 
 export default function LearningPath() {
@@ -38,8 +42,12 @@ export default function LearningPath() {
 
   const [showCertificate, setShowCertificate] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [generationStep, setGenerationStep] = useState(0);
+  const [isSynthesizing, setIsSynthesizing] = useState(false);
+  const [synthesizingGoal, setSynthesizingGoal] = useState('');
+  const [synthProgress, setSynthProgress] = useState(12);
+  const [synthStepIndex, setSynthStepIndex] = useState(0);
+  const synthIntervalRef = useRef(null);
+
   const [genError, setGenError] = useState('');
   const [formData, setFormData] = useState({ goal: '' });
   const [actionLoadingCourse, setActionLoadingCourse] = useState(null);
@@ -54,13 +62,40 @@ export default function LearningPath() {
   const [playerCourseId, setPlayerCourseId] = useState(null);
   const [playerVideoIdx, setPlayerVideoIdx] = useState(0);
 
-  const generationStages = [
-    "Analyzing learning goal...",
-    "Identifying required skills...",
-    "Building learning path...",
-    "Finding relevant courses & resources...",
-    "Learning path ready!"
+  const synthesisSteps = [
+    {
+      shortTitle: "Analyzing Goal",
+      title: "Analyzing Target Goal & Technical Prerequisites",
+      detail: "Deconstructing career trajectory, foundational dependencies, and core skill requirements..."
+    },
+    {
+      shortTitle: "Semantic Search",
+      title: "Querying Semantic Knowledge Embeddings",
+      detail: "Scoring comprehensive course catalog with cosine vector similarity across technical domains..."
+    },
+    {
+      shortTitle: "Structuring Roadmap",
+      title: "Sequencing Multi-Stage Curriculum",
+      detail: "Organizing tailored modules into Foundation, Core Skills, and Advanced Topics stages..."
+    },
+    {
+      shortTitle: "Curating Videos",
+      title: "Curating Verified Video Masterclasses",
+      detail: "Linking active YouTube lessons, structured playlists, and hands-on technical labs..."
+    },
+    {
+      shortTitle: "Finalizing Path",
+      title: "Synthesizing Custom Learning Path",
+      detail: "Connecting milestones and deploying your personalized interactive roadmap..."
+    }
   ];
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (synthIntervalRef.current) clearInterval(synthIntervalRef.current);
+    };
+  }, []);
 
   const handleMarkComplete = async (courseId) => {
     setActionLoadingCourse(courseId);
@@ -110,41 +145,85 @@ export default function LearningPath() {
 
   const handleGeneratePath = async (e) => {
     e.preventDefault();
-    setGenerating(true);
-    setGenError('');
-    setGenerationStep(0);
+    const targetGoal = formData.goal.trim();
+    if (!targetGoal) return;
 
-    // Intentional step transitions reflecting the generation pipeline
-    const stepInterval = setInterval(() => {
-      setGenerationStep(prev => (prev < generationStages.length - 2 ? prev + 1 : prev));
-    }, 900);
+    // 1. Immediately close modal so user is brought back to the page
+    setShowModal(false);
+    setFormData({ goal: '' });
+    setGenError('');
+
+    // 2. Activate on-page animated synthesis state
+    setIsSynthesizing(true);
+    setSynthesizingGoal(targetGoal);
+    setSynthProgress(14);
+    setSynthStepIndex(0);
+
+    // 3. Clear any existing timer
+    if (synthIntervalRef.current) clearInterval(synthIntervalRef.current);
+
+    // 4. Smoothly advance progress and stages over the ~10-14 seconds generation interval
+    const startTime = Date.now();
+    synthIntervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      
+      const calculatedStep = Math.min(
+        synthesisSteps.length - 1,
+        Math.floor(elapsed / 2500)
+      );
+      setSynthStepIndex(calculatedStep);
+
+      setSynthProgress(prev => {
+        if (prev >= 92) return 92;
+        const increment = Math.max(0.4, (92 - prev) * 0.08);
+        return Math.min(92, prev + increment);
+      });
+    }, 400);
 
     try {
       const result = await apiCall('/api/learner/generate-path', 'POST', {
-        goal: formData.goal.trim(),
+        goal: targetGoal,
         level: 'Beginner',
         knownSkills: []
       });
 
-      clearInterval(stepInterval);
+      if (synthIntervalRef.current) clearInterval(synthIntervalRef.current);
 
-      if (result.path === null) {
-        setGenError(result.message);
-      } else {
-        setGenerationStep(generationStages.length - 1);
+      if (result && result.path) {
+        setSynthProgress(100);
+        setSynthStepIndex(synthesisSteps.length - 1);
+
+        const formattedPath = {
+          ...result.path,
+          stages: (result.path.stages || []).map(stage => ({
+            ...stage,
+            courses: (stage.courses || []).map(c => ({
+              ...c,
+              status: c.status || 'Not Started',
+              progress: c.progress || 0
+            }))
+          }))
+        };
+
+        // Brief smooth transition to 100% completion before revealing the new path
         setTimeout(() => {
-          setShowModal(false);
-          setFormData({ goal: '' });
-          toast.success("Learning path generated successfully!");
+          mutatePath(formattedPath);
+          setIsSynthesizing(false);
+          setSynthesizingGoal('');
+          toast.success(`Personalized roadmap for "${targetGoal}" ready!`);
           refetch({ silent: true });
           refetchDashboard({ silent: true });
-        }, 400);
+        }, 550);
+      } else {
+        setIsSynthesizing(false);
+        setSynthesizingGoal('');
+        toast.error(result?.message || 'Unable to generate learning path for this goal.');
       }
     } catch (err) {
-      clearInterval(stepInterval);
-      setGenError('Failed to generate path. Please try again.');
-    } finally {
-      setGenerating(false);
+      if (synthIntervalRef.current) clearInterval(synthIntervalRef.current);
+      setIsSynthesizing(false);
+      setSynthesizingGoal('');
+      toast.error('Failed to generate path. Please try again.');
     }
   };
 
@@ -316,11 +395,27 @@ export default function LearningPath() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{pathData?.title || 'No Path Assigned'}</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{pathData?.subtitle || 'Click "Customize Path" to generate your personalized roadmap!'}</p>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              {isSynthesizing 
+                ? `Synthesizing ${synthesizingGoal} Roadmap` 
+                : (pathData?.title || 'No Path Assigned')}
+            </h1>
+            {isSynthesizing && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 animate-pulse">
+                <Sparkles className="w-3 h-3" />
+                AI Pipeline Active
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            {isSynthesizing
+              ? "SkillUp's semantic AI is assembling your custom curriculum..."
+              : (pathData?.subtitle || 'Click "Customize Path" to generate your personalized roadmap!')}
+          </p>
         </div>
         <div className="flex items-center gap-2.5">
-          {pathData?._id && (
+          {pathData?._id && !isSynthesizing && (
             <AlertDialog>
               <AlertDialog.Trigger className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/40 rounded-xl hover:bg-rose-100/70 dark:hover:bg-rose-950/60 transition-all active:scale-95 shadow-xs select-none">
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -364,7 +459,7 @@ export default function LearningPath() {
             </AlertDialog>
           )}
           {/* Phase 1 Downloadable Certificate Button - only visible when path is 100% completed */}
-          {overallProgress === 100 && totalCourses > 0 && (
+          {overallProgress === 100 && totalCourses > 0 && !isSynthesizing && (
             <Button
               variant="primary"
               icon={Award}
@@ -377,10 +472,12 @@ export default function LearningPath() {
 
           <Button 
             variant="primary"
-            icon={Sparkles}
+            icon={isSynthesizing ? Loader2 : Sparkles}
+            disabled={isSynthesizing}
             onClick={() => setShowModal(true)}
+            className={isSynthesizing ? "opacity-75 cursor-not-allowed" : ""}
           >
-            Customize Path
+            {isSynthesizing ? "Synthesizing..." : "Customize Path"}
           </Button>
         </div>
       </div>
@@ -388,53 +485,12 @@ export default function LearningPath() {
       {/* Customize Path Modal with Glassmorphism & Adaptive AI Engine */}
       <Modal
         isOpen={showModal}
-        onClose={() => { if (!generating) { setShowModal(false); setGenError(''); } }}
+        onClose={() => { setShowModal(false); setGenError(''); }}
         title="Generate AI Learning Path"
         subtitle="Specify your target career goal or technical discipline to build an adaptive curriculum"
         maxWidth="max-w-xl"
       >
-        {generating ? (
-          <div className="py-6 space-y-5">
-            <div className="text-center space-y-2.5">
-              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-purple-500/30">
-                <Sparkles className="w-7 h-7 animate-pulse" />
-                <div className="absolute inset-0 rounded-2xl border border-white/40 animate-ping opacity-25" />
-              </div>
-              <h4 className="font-bold text-gray-900 dark:text-white text-base tracking-tight">Crafting Your Personalized Roadmap</h4>
-              <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
-                Analyzing required skills, sequencing prerequisite modules, and fetching curated tutorial sessions...
-              </p>
-            </div>
-
-            <div className="glass-default rounded-2xl p-4.5 space-y-3 border border-white/40 dark:border-white/10 shadow-sm backdrop-blur-xl">
-              {generationStages.map((stage, idx) => {
-                const isPassed = idx < generationStep;
-                const isCurrent = idx === generationStep;
-                return (
-                  <div key={idx} className="flex items-center gap-3 text-xs transition-colors duration-200">
-                    {isPassed ? (
-                      <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
-                        <Check className="w-3 h-3 stroke-[2.5]" />
-                      </div>
-                    ) : isCurrent ? (
-                      <div className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30 flex items-center justify-center flex-shrink-0">
-                        <div className="w-2.5 h-2.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      </div>
-                    ) : (
-                      <div className="w-5 h-5 rounded-full border border-gray-300/80 dark:border-slate-700 flex-shrink-0" />
-                    )}
-                    <span className={`
-                      ${isCurrent ? "font-semibold text-purple-700 dark:text-purple-300" : isPassed ? "text-gray-800 dark:text-gray-200" : "text-gray-400 dark:text-gray-500"}
-                    `}>
-                      {stage}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleGeneratePath} className="space-y-4.5 pt-1">
+        <form onSubmit={handleGeneratePath} className="space-y-4.5 pt-1">
             {/* Target Goal Input with Glowing Glass Container */}
             <div className="space-y-1.5">
               <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
@@ -550,11 +606,181 @@ export default function LearningPath() {
               </Button>
             </div>
           </form>
-        )}
       </Modal>
 
+      {/* ── Active AI Synthesis State (When generating path) ── */}
+      {isSynthesizing ? (
+        <div className="space-y-6 animate-fadeIn">
+          {/* 1. Futuristic AI Roadmap Synthesizer Hero Card */}
+          <div className="relative overflow-hidden rounded-2xl border border-purple-500/30 dark:border-purple-500/30 bg-gradient-to-br from-purple-900/10 via-indigo-900/10 to-blue-900/10 dark:from-purple-950/40 dark:via-indigo-950/30 dark:to-slate-900/50 backdrop-blur-xl p-6 sm:p-8 shadow-xl shadow-purple-500/5 transition-all">
+            {/* Ambient glowing radial orbs */}
+            <div className="absolute -top-24 -left-24 w-64 h-64 bg-purple-500/15 dark:bg-purple-600/20 rounded-full blur-3xl pointer-events-none animate-pulse" />
+            <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-indigo-500/15 dark:bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Celebratory Completion Banner (Phase 1 Certificate Reward) */}
+            <div className="relative z-10 space-y-6">
+              {/* Top row: AI Core Icon + Target Goal Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="relative flex-shrink-0">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-500 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
+                      <Sparkles className="w-7 h-7 animate-pulse text-white" />
+                    </div>
+                    <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-purple-500 to-cyan-400 opacity-40 blur-sm animate-pulse -z-10" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                        Neural Curriculum Compiler
+                      </span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                      Generating Curriculum for <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 dark:from-purple-300 dark:via-indigo-300 dark:to-cyan-300">{synthesizingGoal}</span>
+                    </h3>
+                  </div>
+                </div>
+
+                {/* Percentage indicator */}
+                <div className="flex items-baseline gap-2 self-start sm:self-center bg-white/60 dark:bg-slate-900/60 px-4 py-2 rounded-xl border border-purple-500/20 backdrop-blur-md">
+                  <span className="text-2xl font-black text-purple-600 dark:text-purple-400 tabular-nums">
+                    {Math.min(99, Math.round(synthProgress))}%
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Ready</span>
+                </div>
+              </div>
+
+              {/* Shimmering Progress Bar with sweeping light beam */}
+              <div className="space-y-2">
+                <div className="relative h-2.5 w-full bg-gray-200/80 dark:bg-slate-800/80 rounded-full overflow-hidden p-0.5 border border-purple-500/10">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400 transition-all duration-500 ease-out relative overflow-hidden"
+                    style={{ width: `${Math.min(100, Math.max(10, synthProgress))}%` }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-sweep" />
+                  </div>
+                </div>
+                <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400 font-medium">
+                  <span className="flex items-center gap-1.5 text-purple-700 dark:text-purple-300">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    {synthesisSteps[synthStepIndex]?.title}
+                  </span>
+                  <span className="tabular-nums">
+                    Phase {synthStepIndex + 1} of {synthesisSteps.length}
+                  </span>
+                </div>
+              </div>
+
+              {/* Active Step Ticker Callout */}
+              <div className="p-4 rounded-xl bg-white/50 dark:bg-slate-900/50 border border-purple-500/20 backdrop-blur-md flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Cpu className="w-4 h-4 animate-pulse" />
+                </div>
+                <div className="space-y-0.5 min-w-0 flex-1">
+                  <div className="text-xs font-bold text-gray-900 dark:text-gray-200">
+                    {synthesisSteps[synthStepIndex]?.title}
+                  </div>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                    {synthesisSteps[synthStepIndex]?.detail}
+                  </p>
+                </div>
+              </div>
+
+              {/* 5-Step Pipeline Breadcrumbs */}
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 pt-1">
+                {synthesisSteps.map((step, idx) => {
+                  const isDone = idx < synthStepIndex;
+                  const isCurrent = idx === synthStepIndex;
+                  return (
+                    <div
+                      key={idx}
+                      className={`p-2.5 rounded-xl border text-xs transition-all duration-300 flex items-center gap-2 ${
+                        isDone
+                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-medium"
+                          : isCurrent
+                          ? "bg-purple-500/15 border-purple-500/40 text-purple-800 dark:text-purple-200 font-semibold shadow-sm shadow-purple-500/10"
+                          : "bg-white/30 dark:bg-white/5 border-gray-200/50 dark:border-white/5 text-gray-400 dark:text-gray-500 opacity-60"
+                      }`}
+                    >
+                      {isDone ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                      ) : isCurrent ? (
+                        <div className="w-3.5 h-3.5 rounded-full border-2 border-purple-500 border-t-transparent animate-spin flex-shrink-0" />
+                      ) : (
+                        <div className="w-2 h-2 rounded-full bg-gray-300 dark:bg-slate-600 flex-shrink-0 mx-0.5" />
+                      )}
+                      <span className="truncate">{step.shortTitle || step.title}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* 2. Multi-Stage Roadmap Blueprint Construction */}
+          <DashboardCard
+            title="Curriculum Blueprint Construction"
+            subtitle="AI is organizing modules into progressive mastery tiers..."
+          >
+            <div className="space-y-8 py-2">
+              {[
+                { phase: "Stage 1: Foundation & Prerequisites", desc: "Core fundamentals & essential toolchain", count: 2, icon: BookOpen, accent: "from-blue-500 to-cyan-500" },
+                { phase: "Stage 2: Core Engineering & Applied Skills", desc: "Hands-on implementation & deep technical concepts", count: 3, icon: Target, accent: "from-purple-500 to-indigo-500" },
+                { phase: "Stage 3: Advanced Topics & Production Mastery", desc: "Specialized architectures & deployment workflows", count: 2, icon: Award, accent: "from-amber-500 to-rose-500" }
+              ].map((stage, idx) => (
+                <div key={idx} className="relative">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-xl bg-gradient-to-tr ${stage.accent} text-white flex items-center justify-center shadow-sm`}>
+                        <stage.icon className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 dark:text-gray-100 text-sm">{stage.phase}</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{stage.desc}</p>
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20">
+                      <Loader2 className="w-3 h-3 animate-spin text-purple-500" />
+                      Compiling Modules
+                    </span>
+                  </div>
+
+                  {idx < 2 && (
+                    <div className="absolute left-4.5 top-11 w-0.5 h-full bg-gradient-to-b from-purple-500/40 via-indigo-500/20 to-transparent -z-10" />
+                  )}
+
+                  <div className="ml-0 sm:ml-12 space-y-3">
+                    {Array.from({ length: stage.count }).map((_, cIdx) => (
+                      <div
+                        key={cIdx}
+                        className="p-4 rounded-xl border border-gray-200/70 dark:border-white/10 bg-white/60 dark:bg-slate-900/40 backdrop-blur-md shadow-xs space-y-3"
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="space-y-2 flex-1">
+                            <div className="h-4 w-48 sm:w-72 bg-gradient-to-r from-gray-200 to-gray-300/60 dark:from-slate-700 dark:to-slate-800 rounded-md skeleton-shimmer" />
+                            <div className="flex items-center gap-3">
+                              <div className="h-3 w-20 bg-gray-200/80 dark:bg-slate-700/80 rounded skeleton-shimmer" />
+                              <div className="h-3 w-28 bg-gray-200/80 dark:bg-slate-700/80 rounded skeleton-shimmer" />
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="h-7 w-20 bg-rose-500/10 rounded-lg skeleton-shimmer" />
+                            <div className="h-7 w-24 bg-gray-200 dark:bg-slate-700 rounded-lg skeleton-shimmer" />
+                          </div>
+                        </div>
+                        <div className="h-1.5 w-full bg-gray-200/60 dark:bg-slate-800 rounded-full overflow-hidden">
+                          <div className="h-full w-1/3 bg-purple-500/40 rounded-full skeleton-shimmer" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DashboardCard>
+        </div>
+      ) : (
+        <>
+          {/* Celebratory Completion Banner (Phase 1 Certificate Reward) */}
       {overallProgress === 100 && totalCourses > 0 && (
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500/15 via-purple-500/15 to-indigo-500/15 border border-amber-500/30 dark:border-amber-400/30 p-5 sm:p-6 shadow-lg backdrop-blur-sm">
           <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
@@ -959,6 +1185,8 @@ export default function LearningPath() {
           </div>
         </div>
       </DashboardCard>
+        </>
+      )}
 
       {/* ── Video Player Window ── */}
       <VideoPlayerWindow
