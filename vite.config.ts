@@ -32,6 +32,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@/components/ui/button': path.resolve(__dirname, './src/app/components/ui/Button.jsx'),
       '@/components': path.resolve(__dirname, './src/app/components'),
       '@': path.resolve(__dirname, './src'),
     },

@@ -4,7 +4,7 @@ import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuL
 import { cn } from "@/lib/utils";
 import { Menu, X, ArrowUpRight } from "lucide-react";
 import Logo from "@/assets/logo/logo";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { motion } from "motion/react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
