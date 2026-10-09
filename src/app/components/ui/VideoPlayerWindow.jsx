@@ -69,6 +69,13 @@ export function VideoPlayerWindow({
     setIframeLoaded(false);
     setAutoCompletedNotice(false);
     hasAutoCompletedRef.current = false;
+
+    // Safety fallback: if iframe onLoad or YT onReady doesn't fire within 800ms, dismiss the loader
+    const timer = setTimeout(() => {
+      setIframeLoaded(true);
+    }, 800);
+
+    return () => clearTimeout(timer);
   }, [video?.videoId]);
 
   // Handler invoked when the video reaches the end
@@ -104,6 +111,9 @@ export function VideoPlayerWindow({
 
         playerInstanceRef.current = new window.YT.Player(iframeRef.current, {
           events: {
+            onReady: () => {
+              setIframeLoaded(true);
+            },
             onStateChange: (event) => {
               // 0 represents YT.PlayerState.ENDED
               if (event.data === 0) {
@@ -289,29 +299,32 @@ export function VideoPlayerWindow({
 
         {/* ── YouTube Embed ── */}
         <div className="relative w-full bg-black/90 shadow-inner" style={{ aspectRatio: "16/9" }}>
-          {/* Loading skeleton */}
-          {!iframeLoaded && (
-            <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-10">
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-16 h-16 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shadow-lg backdrop-blur-lg">
-                  <Play className="w-8 h-8 text-white/70 fill-white/70" />
-                </div>
-                <div className="flex items-center gap-2 text-white/60 text-sm font-medium">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-indigo-400 rounded-full animate-spin" />
-                  Loading video...
-                </div>
+          {/* Loading skeleton - fades out smoothly and never blocks user clicks */}
+          <div
+            className={`absolute inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-10 transition-opacity duration-500 pointer-events-none ${
+              iframeLoaded ? "opacity-0" : "opacity-100"
+            }`}
+          >
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-16 h-16 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shadow-lg backdrop-blur-lg">
+                <Play className="w-8 h-8 text-white/70 fill-white/70" />
+              </div>
+              <div className="flex items-center gap-2 text-white/60 text-sm font-medium">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-indigo-400 rounded-full animate-spin" />
+                Loading video...
               </div>
             </div>
-          )}
+          </div>
+
           <iframe
             key={video.videoId}
             id={`yt-player-${video.videoId}`}
             ref={iframeRef}
-            src={`https://www.youtube.com/embed/${video.videoId}?enablejsapi=1&rel=0&modestbranding=1`}
+            src={`https://www.youtube.com/embed/${video.videoId}?enablejsapi=1&rel=0&modestbranding=1${currentOrigin ? `&origin=${encodeURIComponent(currentOrigin)}` : ""}`}
             title={video.title}
             className="absolute inset-0 w-full h-full"
             frameBorder="0"
-            referrerPolicy="strict-origin-when-cross-origin"
+            referrerPolicy="no-referrer-when-downgrade"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
             onLoad={handleIframeLoaded}
