@@ -15,24 +15,30 @@ router.get('/dashboard', protect, async (req, res) => {
     const enrollments = await Enrollment.find({ user: req.user._id }).populate('course');
     const path = await LearningPath.findOne({ user: req.user._id }).populate('stages.courses');
 
-    const completed = enrollments.filter(e => e.status === 'Completed').length;
-    const inProgress = enrollments.filter(e => e.status === 'In Progress').length;
-
-    // Career Readiness = (completed courses in path / total courses in path) × 100
-    let totalPathCourses = 0;
-    let completedPathCourses = 0;
+    // Parse active path courses
+    const pathCourseIds = new Set();
+    const orderedPathCourses = [];
     if (path?.stages?.length) {
-      const pathCourseIds = new Set();
       for (const stage of path.stages) {
-        for (const course of stage.courses) {
-          pathCourseIds.add(course._id.toString());
+        for (const course of (stage.courses || [])) {
+          if (course && course._id) {
+            pathCourseIds.add(course._id.toString());
+            orderedPathCourses.push(course);
+          }
         }
       }
-      totalPathCourses = pathCourseIds.size;
-      completedPathCourses = enrollments.filter(
-        e => e.status === 'Completed' && pathCourseIds.has(e.course._id.toString())
-      ).length;
     }
+
+    const totalPathCourses = pathCourseIds.size;
+    const completedPathCourses = totalPathCourses > 0
+      ? enrollments.filter(e => e.status === 'Completed' && e.course?._id && pathCourseIds.has(e.course._id.toString())).length
+      : enrollments.filter(e => e.status === 'Completed').length;
+
+    const inProgressPathCourses = totalPathCourses > 0
+      ? enrollments.filter(e => e.status === 'In Progress' && e.course?._id && pathCourseIds.has(e.course._id.toString())).length
+      : enrollments.filter(e => e.status === 'In Progress').length;
+
+    // Career Readiness = (completed courses in path / total courses in path) × 100
     const readiness = totalPathCourses > 0
       ? Math.round((completedPathCourses / totalPathCourses) * 100)
       : 0;
@@ -45,15 +51,61 @@ router.get('/dashboard', protect, async (req, res) => {
       }
     });
 
-    // Current course (first In Progress)
-    const currentEnrollment = enrollments.find(e => e.status === 'In Progress');
-    const currentCourse = currentEnrollment ? {
-      title: currentEnrollment.course?.title || 'Unknown',
-      progress: currentEnrollment.progress,
-    } : null;
+    // Current course: strictly scoped to the active learning path
+    let currentCourse = null;
+    if (orderedPathCourses.length > 0) {
+      // 1. Look for an in-progress course inside the active path
+      const currentPathEnrollment = enrollments.find(
+        e => e.status === 'In Progress' && e.course?._id && pathCourseIds.has(e.course._id.toString())
+      );
 
-    // Remaining courses
-    const remainingCourses = totalPathCourses - completedPathCourses;
+      if (currentPathEnrollment) {
+        currentCourse = {
+          _id: currentPathEnrollment.course._id,
+          title: currentPathEnrollment.course.title || 'Unknown',
+          progress: currentPathEnrollment.progress || 0,
+          status: 'In Progress'
+        };
+      } else {
+        // 2. Find first uncompleted course in current path order (Foundation -> Core -> Advanced)
+        for (const course of orderedPathCourses) {
+          const courseIdStr = course._id.toString();
+          const enrollment = enrollments.find(e => e.course?._id?.toString() === courseIdStr);
+          if (!enrollment || enrollment.status !== 'Completed') {
+            currentCourse = {
+              _id: course._id,
+              title: course.title || 'Unknown',
+              progress: enrollment ? (enrollment.progress || 0) : 0,
+              status: enrollment ? (enrollment.status || 'Not Started') : 'Not Started'
+            };
+            break;
+          }
+        }
+
+        // 3. If all courses in path are completed, show last course
+        if (!currentCourse && orderedPathCourses.length > 0) {
+          const lastCourse = orderedPathCourses[orderedPathCourses.length - 1];
+          currentCourse = {
+            _id: lastCourse._id,
+            title: lastCourse.title || 'Unknown',
+            progress: 100,
+            status: 'Completed'
+          };
+        }
+      }
+    } else {
+      // Fallback for users with no learning path
+      const currentEnrollment = enrollments.find(e => e.status === 'In Progress');
+      currentCourse = currentEnrollment ? {
+        _id: currentEnrollment.course?._id,
+        title: currentEnrollment.course?.title || 'Unknown',
+        progress: currentEnrollment.progress || 0,
+        status: currentEnrollment.status || 'In Progress'
+      } : null;
+    }
+
+    // Remaining courses in path
+    const remainingCourses = Math.max(0, totalPathCourses - completedPathCourses);
 
     // Skill progress — real monthly data from enrollment timestamps
     const now = new Date();
@@ -103,8 +155,8 @@ router.get('/dashboard', protect, async (req, res) => {
     res.json({
       metrics: {
         readiness,
-        completed,
-        inProgress,
+        completed: completedPathCourses,
+        inProgress: inProgressPathCourses,
         skillsMastered: completedSkills.size,
         learningStreak: activeDaysCount,
         totalPathCourses,

@@ -86,12 +86,39 @@ export default function LearnerDashboard() {
   }
 
   const metrics = dashboardData?.metrics || {};
-  const currentCourse = dashboardData?.currentCourse;
 
-  const totalPathCourses = metrics.totalPathCourses || pathCourses.length || 0;
-  const remainingCourses = metrics.remainingCourses !== undefined
-    ? metrics.remainingCourses
-    : Math.max(0, totalPathCourses - (metrics.completed || 0));
+  // Resolve active course from current learning path
+  const currentCourse = useMemo(() => {
+    if (pathCourses.length > 0) {
+      if (dashboardData?.currentCourse?.title) {
+        const match = pathCourses.find(c => c.title === dashboardData.currentCourse.title);
+        if (match) return match;
+      }
+      const inProgress = pathCourses.find(c => c.status === 'In Progress');
+      if (inProgress) return inProgress;
+      const nextUp = pathCourses.find(c => c.status !== 'Completed');
+      if (nextUp) return nextUp;
+      return pathCourses[0];
+    }
+    return dashboardData?.currentCourse || null;
+  }, [dashboardData, pathCourses]);
+
+  const completedPathCount = useMemo(() => {
+    if (pathCourses.length > 0) {
+      return pathCourses.filter(c => c.status === 'Completed').length;
+    }
+    return metrics.completed || 0;
+  }, [pathCourses, metrics.completed]);
+
+  const inProgressPathCount = useMemo(() => {
+    if (pathCourses.length > 0) {
+      return pathCourses.filter(c => c.status === 'In Progress').length;
+    }
+    return metrics.inProgress || 0;
+  }, [pathCourses, metrics.inProgress]);
+
+  const totalPathCourses = pathCourses.length || metrics.totalPathCourses || 0;
+  const remainingCourses = Math.max(0, totalPathCourses - completedPathCount);
 
   const skillProgressData = dashboardData?.skillProgressData || [];
 
@@ -139,10 +166,10 @@ export default function LearnerDashboard() {
           <div className="space-y-1">
             <p className="text-xs sm:text-sm font-semibold text-gray-600 dark:text-slate-300">Courses Completed</p>
             <p className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-white pt-1">
-              {metrics.completed || 0}
+              {completedPathCount}
             </p>
             <p className="text-xs font-semibold text-gray-600 dark:text-slate-400 pt-1">
-              {metrics.inProgress || 0} in progress
+              {inProgressPathCount} in progress
             </p>
           </div>
           <GlassIcon icon={BookOpen} variant="purple" />
@@ -186,10 +213,14 @@ export default function LearnerDashboard() {
               Currently Working On
             </span>
             <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white mt-1">
-              {currentCourse?.title || (pathCourses.length > 0 ? "Ready to start next course" : "No active course")}
+              {currentCourse?.title || (pathCourses.length > 0 ? pathCourses[0]?.title : "No active course")}
             </h2>
             <p className="text-xs sm:text-sm font-semibold text-gray-600 dark:text-slate-300 mt-0.5">
-              {currentCourse ? `Progress: ${currentCourse.progress}%` : "Continue your learning path to get started."}
+              {currentCourse 
+                ? (currentCourse.progress > 0 
+                    ? `Progress: ${currentCourse.progress}% • ${currentCourse.status || 'In Progress'}`
+                    : `Ready to start • ${currentCourse.duration || 'Self-Paced'}`)
+                : "Continue your learning path to get started."}
             </p>
           </div>
 
