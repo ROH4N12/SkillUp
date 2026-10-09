@@ -16,10 +16,23 @@ import Course from './models/Course.js';
 
 dotenv.config();
 
+// Warn loudly in development if JWT_SECRET is using the insecure fallback
+if (!process.env.JWT_SECRET) {
+  console.warn('\x1b[33m[SECURITY WARNING]\x1b[0m JWT_SECRET is not set. Using insecure fallback. Set JWT_SECRET in your .env file before deploying to production.');
+}
+
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+// CORS — allow known origins; defaults to permissive in dev if FRONTEND_URL is unset
+const allowedOrigins = process.env.FRONTEND_URL
+  ? [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000']
+  : true; // Allow all in dev
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
+app.use(express.json({ limit: '10mb' }));
 
 // Ensure MongoDB is connected before handling any API requests
 app.use(async (req, res, next) => {

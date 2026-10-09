@@ -222,8 +222,17 @@ router.put('/videos/complete', protect, async (req, res) => {
       enrollment.completedVideos.splice(idx, 1);
     }
 
-    // Recalculate progress from video completion ratio
-    const totalVideos = course.videos?.length || 1;
+    // Recalculate progress using actual video source (master catalog → db → fallback)
+    // This mirrors the GET /videos/:courseId source-selection logic
+    const masterCourse = verifiedCatalogByTitle.get((course.title || '').toLowerCase().trim());
+    const verifiedVideos = masterCourse?.videos;
+    const activeVideos = (verifiedVideos && verifiedVideos.length > 0)
+      ? verifiedVideos
+      : (course.videos && course.videos.length > 0)
+        ? course.videos
+        : pickFallbackVideos(course);
+
+    const totalVideos = Math.max(1, activeVideos.length);
     const completedCount = enrollment.completedVideos.length;
     const newProgress = Math.round((completedCount / totalVideos) * 100);
 

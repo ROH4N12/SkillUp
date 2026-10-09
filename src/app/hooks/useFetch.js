@@ -18,13 +18,20 @@ export function useFetch(url, initialData = null) {
 
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Not authenticated');
+        return null;
+      }
       const res = await fetch(getApiUrl(url), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
-      if (!res.ok) throw new Error('Fetch failed');
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.message || `Request failed with status ${res.status}`);
+      }
       const json = await res.json();
       setData(json);
       hasDataRef.current = true;
@@ -32,7 +39,8 @@ export function useFetch(url, initialData = null) {
       return json;
     } catch (err) {
       setError(err.message);
-      throw err;
+      // Do NOT re-throw — callers can check the `error` state instead
+      return null;
     } finally {
       setLoading(false);
       setIsRefetching(false);

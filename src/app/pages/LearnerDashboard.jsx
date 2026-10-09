@@ -68,22 +68,7 @@ export default function LearnerDashboard() {
     return dashboardData?.skillRadarData || [{ skill: 'Core Track', current: 20, required: 100 }];
   }, [dashboardData, pathCourses]);
 
-  if (dashboardLoading || pathLoading) {
-    return (
-      <div className="space-y-6 w-full">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-64 rounded-xl" />
-          <Skeleton className="h-4 w-96 rounded-lg" />
-        </div>
-        <SkeletonMetrics count={4} />
-        <Skeleton className="h-32 w-full rounded-2xl" />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SkeletonChart height="h-80" />
-          <SkeletonChart height="h-80" />
-        </div>
-      </div>
-    );
-  }
+  // ── ALL hooks must be called before any early returns (Rules of Hooks) ──
 
   const metrics = dashboardData?.metrics || {};
 
@@ -121,6 +106,24 @@ export default function LearnerDashboard() {
   const remainingCourses = Math.max(0, totalPathCourses - completedPathCount);
 
   const skillProgressData = dashboardData?.skillProgressData || [];
+
+  // ── Early return for loading state — after all hooks ──
+  if (dashboardLoading || pathLoading) {
+    return (
+      <div className="space-y-6 w-full">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64 rounded-xl" />
+          <Skeleton className="h-4 w-96 rounded-lg" />
+        </div>
+        <SkeletonMetrics count={4} />
+        <Skeleton className="h-32 w-full rounded-2xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SkeletonChart height="h-80" />
+          <SkeletonChart height="h-80" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 sm:space-y-8 w-full">

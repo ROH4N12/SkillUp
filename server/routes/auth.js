@@ -9,9 +9,23 @@ const router = express.Router();
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
+    // Input validation
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email and password are required' });
+    }
+    if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return res.status(400).json({ message: 'Invalid email address' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+    if (name.trim().length > 100) {
+      return res.status(400).json({ message: 'Name is too long' });
+    }
     // Role is always forced to 'learner' — trainer/counselor are admin-assigned only
     
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email: email.trim().toLowerCase() });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
@@ -20,8 +34,8 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const user = await User.create({
-      name,
-      email,
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
       password: hashedPassword,
       role: 'learner',
     });
@@ -46,7 +60,11 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
 
     if (user && (await bcrypt.compare(password, user.password))) {
       res.json({
