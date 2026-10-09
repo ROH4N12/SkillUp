@@ -113,9 +113,9 @@ router.post('/demo-login', async (req, res) => {
     const targetRole = ['learner', 'trainer', 'counselor'].includes(role) ? role : 'learner';
 
     const demoProfiles = {
-      learner: { name: 'Alex Mercer (Learner)', email: 'demo.learner@skillup.ai' },
-      trainer: { name: 'Prof. Alex Turner (Senior Trainer)', email: 'demo.trainer@skillup.ai' },
-      counselor: { name: 'Dr. Sarah Mitchell (Academic Counselor)', email: 'demo.counselor@skillup.ai' },
+      learner: { name: 'Rohan (Learner)', email: 'rohan.learner@skillup.ai' },
+      trainer: { name: 'Atharva (Senior Trainer)', email: 'atharva.trainer@skillup.ai' },
+      counselor: { name: 'Sayujya (Academic Counselor)', email: 'sayujya.counselor@skillup.ai' },
     };
 
     const profile = demoProfiles[targetRole];

@@ -1,0 +1,18 @@
+:root {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-serif-italic: 'Instrument Serif', Georgia, serif;
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-instrument-serif {
+  font-family: var(--font-serif-italic);
+  font-style: italic;
+}
