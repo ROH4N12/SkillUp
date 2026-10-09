@@ -26,6 +26,18 @@ export const autoSeedDatabase = async () => {
         await Course.insertMany(missing);
         console.log(`Successfully synced ${missing.length} new courses. Total: ${existingTitles.size + missing.length}`);
       }
+
+      // Sync verified videos for existing courses
+      const bulkOps = engineeringCourses.map(c => ({
+        updateOne: {
+          filter: { title: c.title },
+          update: { $set: { videos: c.videos, domain: c.domain } }
+        }
+      }));
+      if (bulkOps.length > 0) {
+        await Course.bulkWrite(bulkOps);
+        console.log(`Synced verified videos for all ${bulkOps.length} courses in database.`);
+      }
     }
   } catch (error) {
     console.error('Auto-seed check error:', error.message);

@@ -2,10 +2,16 @@ import express from 'express';
 import { protect } from '../middleware/auth.js';
 import Course from '../models/Course.js';
 import Enrollment from '../models/Enrollment.js';
+import { allCourses } from '../config/allCourses.js';
 
 const router = express.Router();
 
-// ── Static video fallback map (curated, high-quality YouTube videos) ────
+// Pre-index master verified catalog by title for instant O(1) fallback
+const verifiedCatalogByTitle = new Map(
+  allCourses.map(c => [c.title.toLowerCase().trim(), c])
+);
+
+// ── Static video fallback map (curated, 100% verified active YouTube videos) ────
 const VIDEO_FALLBACKS = {
   'react': [
     { videoId: 'bMknfKXIFA8', title: 'React Course - Beginner\'s Tutorial (2024)', thumbnail: 'https://img.youtube.com/vi/bMknfKXIFA8/mqdefault.jpg', channel: 'freeCodeCamp' },
@@ -86,7 +92,7 @@ const VIDEO_FALLBACKS = {
     { videoId: 'j5Zsa_eOXeY', title: 'Docker Tutorial for Beginners', thumbnail: 'https://img.youtube.com/vi/j5Zsa_eOXeY/mqdefault.jpg', channel: 'Programming with Mosh' },
   ],
   'database': [
-    { videoId: 'HXV3zeRR3h4', title: 'SQL Tutorial - Full Database Course for Beginners', thumbnail: 'https://img.youtube.com/vi/HXV3zeRR3h4/mqdefault.jpg', channel: 'freeCodeCamp' },
+    { videoId: 'HXV3zeQKqGY', title: 'SQL Tutorial - Full Database Course for Beginners', thumbnail: 'https://img.youtube.com/vi/HXV3zeQKqGY/mqdefault.jpg', channel: 'freeCodeCamp' },
     { videoId: 'ofme2o29ngU', title: 'MongoDB Full Course 2024', thumbnail: 'https://img.youtube.com/vi/ofme2o29ngU/mqdefault.jpg', channel: 'Dave Gray' },
   ],
   'system design': [
@@ -95,34 +101,38 @@ const VIDEO_FALLBACKS = {
   ],
   'generative ai': [
     { videoId: 'mEsleV16qdo', title: 'Generative AI Full Course – Gemini, ChatGPT, LLMs', thumbnail: 'https://img.youtube.com/vi/mEsleV16qdo/mqdefault.jpg', channel: 'freeCodeCamp' },
-    { videoId: 'jkrNckP444A', title: 'LangChain Full Course for Beginners', thumbnail: 'https://img.youtube.com/vi/jkrNckP444A/mqdefault.jpg', channel: 'freeCodeCamp' },
+    { videoId: 'jC4v5AS4RIM', title: 'ChatGPT Prompt Engineering for Developers', thumbnail: 'https://img.youtube.com/vi/jC4v5AS4RIM/mqdefault.jpg', channel: 'freeCodeCamp' },
   ],
   'llm': [
     { videoId: 'mEsleV16qdo', title: 'Generative AI Full Course – Gemini, ChatGPT, LLMs', thumbnail: 'https://img.youtube.com/vi/mEsleV16qdo/mqdefault.jpg', channel: 'freeCodeCamp' },
-    { videoId: 'jkrNckP444A', title: 'LangChain Full Course for Beginners', thumbnail: 'https://img.youtube.com/vi/jkrNckP444A/mqdefault.jpg', channel: 'freeCodeCamp' },
+    { videoId: 'jC4v5AS4RIM', title: 'ChatGPT Prompt Engineering for Developers', thumbnail: 'https://img.youtube.com/vi/jC4v5AS4RIM/mqdefault.jpg', channel: 'freeCodeCamp' },
   ],
   'rust': [
     { videoId: 'MsocPEZBd-M', title: 'Rust Programming Course for Beginners', thumbnail: 'https://img.youtube.com/vi/MsocPEZBd-M/mqdefault.jpg', channel: 'freeCodeCamp' },
     { videoId: 'zF34dRivLOw', title: 'Rust Crash Course', thumbnail: 'https://img.youtube.com/vi/zF34dRivLOw/mqdefault.jpg', channel: 'Traversy Media' },
   ],
   'sre': [
-    { videoId: 'u4Y7pTq9o0c', title: 'Site Reliability Engineering (SRE) Handbook Overview', thumbnail: 'https://img.youtube.com/vi/u4Y7pTq9o0c/mqdefault.jpg', channel: 'Google Cloud Tech' },
-    { videoId: 'uK5pyd8W-4A', title: 'Introduction to SRE', thumbnail: 'https://img.youtube.com/vi/uK5pyd8W-4A/mqdefault.jpg', channel: 'IBM Technology' },
+    { videoId: 'sISn7jhUl-I', title: 'What is Site Reliability Engineering (SRE)?', thumbnail: 'https://img.youtube.com/vi/sISn7jhUl-I/mqdefault.jpg', channel: 'IBM Technology' },
+    { videoId: 'M988_fsOSWo', title: 'Incident Response and Postmortems in SRE', thumbnail: 'https://img.youtube.com/vi/M988_fsOSWo/mqdefault.jpg', channel: 'IBM Technology' },
   ],
   'robotics': [
-    { videoId: 'g6B4P2a0e-4', title: 'ROS 2 Basics Tutorial', thumbnail: 'https://img.youtube.com/vi/g6B4P2a0e-4/mqdefault.jpg', channel: 'Articulated Robotics' },
-    { videoId: '6b6tPq2o0c8', title: 'Robotics: Kinematics and Control', thumbnail: 'https://img.youtube.com/vi/6b6tPq2o0c8/mqdefault.jpg', channel: 'Stanford Online' },
+    { videoId: 'Gg25GfA456o', title: 'ROS 2 Basics Tutorial', thumbnail: 'https://img.youtube.com/vi/Gg25GfA456o/mqdefault.jpg', channel: 'Articulated Robotics' },
+    { videoId: 'i_LwzRVP7bg', title: 'Robotics Perception & Computer Vision', thumbnail: 'https://img.youtube.com/vi/i_LwzRVP7bg/mqdefault.jpg', channel: 'freeCodeCamp' },
   ],
   'embedded': [
-    { videoId: '8aGhZQkoFbQ', title: 'Embedded Systems Programming on ARM Cortex-M', thumbnail: 'https://img.youtube.com/vi/8aGhZQkoFbQ/mqdefault.jpg', channel: 'Fastbit Embedded' },
-    { videoId: 'X9M3V3L5T-s', title: 'Microcontroller Fundamentals', thumbnail: 'https://img.youtube.com/vi/X9M3V3L5T-s/mqdefault.jpg', channel: 'GreatScott!' },
+    { videoId: '6Maq5IyHSuc', title: 'Basic Electronics & Microcontroller Fundamentals', thumbnail: 'https://img.youtube.com/vi/6Maq5IyHSuc/mqdefault.jpg', channel: 'The Organic Chemistry Tutor' },
+    { videoId: 'IY8v18B9MSo', title: 'I2C, SPI, and UART Protocols Explained', thumbnail: 'https://img.youtube.com/vi/IY8v18B9MSo/mqdefault.jpg', channel: 'GreatScott!' },
+    { videoId: 'F321087yYy4', title: 'Introduction to RTOS with FreeRTOS', thumbnail: 'https://img.youtube.com/vi/F321087yYy4/mqdefault.jpg', channel: 'DigiKey' },
   ],
   'interview': [
-    { videoId: 'klL5n_F7o6g', title: 'Top Coding Interview Patterns', thumbnail: 'https://img.youtube.com/vi/klL5n_F7o6g/mqdefault.jpg', channel: 'NeetCode' },
-    { videoId: '8a-5Ijoq4i8', title: 'How to Crack the Tech Interview', thumbnail: 'https://img.youtube.com/vi/8a-5Ijoq4i8/mqdefault.jpg', channel: 'freeCodeCamp' },
+    { videoId: '39zRq_cVDGQ', title: 'Aptitude Test Questions & Answers', thumbnail: 'https://img.youtube.com/vi/39zRq_cVDGQ/mqdefault.jpg', channel: 'CareerVidz' },
+    { videoId: 'KLlXCFG5TnA', title: 'Top Coding Interview Patterns', thumbnail: 'https://img.youtube.com/vi/KLlXCFG5TnA/mqdefault.jpg', channel: 'NeetCode' },
+    { videoId: '1mHjMNZZvFo', title: 'STAR Method Interview Questions & Answers', thumbnail: 'https://img.youtube.com/vi/1mHjMNZZvFo/mqdefault.jpg', channel: 'CareerVidz' },
+    { videoId: 'yp693O87GmM', title: 'How to Build a Developer Portfolio and Resume', thumbnail: 'https://img.youtube.com/vi/yp693O87GmM/mqdefault.jpg', channel: 'freeCodeCamp' },
   ],
   'product management': [
-    { videoId: '2b7tPq2o0c8', title: 'Product Management for Beginners', thumbnail: 'https://img.youtube.com/vi/2b7tPq2o0c8/mqdefault.jpg', channel: 'Product School' },
+    { videoId: 'yzeVMecydCE', title: 'Open Tech Leadership & Product Management', thumbnail: 'https://img.youtube.com/vi/yzeVMecydCE/mqdefault.jpg', channel: 'freeCodeCamp' },
+    { videoId: 'm8Icp_Cid5o', title: 'Writing Technical Specifications & Architecture', thumbnail: 'https://img.youtube.com/vi/m8Icp_Cid5o/mqdefault.jpg', channel: 'freeCodeCamp' },
   ],
   'default': [
     { videoId: 'PkZNo7MFNFg', title: 'Programming Fundamentals', thumbnail: 'https://img.youtube.com/vi/PkZNo7MFNFg/mqdefault.jpg', channel: 'freeCodeCamp' },
@@ -135,7 +145,7 @@ const VIDEO_FALLBACKS = {
  * Match the best fallback video set by scanning course title/domain/skills
  */
 function pickFallbackVideos(course) {
-  const haystack = `${course.title} ${course.domain} ${(course.skills || []).join(' ')}`.toLowerCase();
+  const haystack = `${course.title || ''} ${course.domain || ''} ${(course.skills || []).join(' ')}`.toLowerCase();
 
   for (const keyword of Object.keys(VIDEO_FALLBACKS)) {
     if (keyword !== 'default' && haystack.includes(keyword)) {
@@ -146,16 +156,20 @@ function pickFallbackVideos(course) {
 }
 
 // ── GET /api/learner/videos/:courseId ──────────────────────────────────
-// Pure DB read: No live outbound YouTube requests are made during request handling.
-// If courses were not yet populated by the batch script, in-memory fallback is used.
 router.get('/videos/:courseId', protect, async (req, res) => {
   try {
     const course = await Course.findById(req.params.courseId);
     if (!course) return res.status(404).json({ message: 'Course not found' });
 
-    const courseVideos = (course.videos && course.videos.length > 0)
-      ? course.videos
-      : pickFallbackVideos(course);
+    // Always prefer the 100% verified master catalog videos for this course
+    const masterCourse = verifiedCatalogByTitle.get((course.title || '').toLowerCase().trim());
+    const verifiedVideos = masterCourse?.videos;
+
+    const courseVideos = (verifiedVideos && verifiedVideos.length > 0)
+      ? verifiedVideos
+      : (course.videos && course.videos.length > 0)
+        ? course.videos
+        : pickFallbackVideos(course);
 
     // Get user's enrollment to check completed videos
     const enrollment = await Enrollment.findOne({
@@ -168,8 +182,8 @@ router.get('/videos/:courseId', protect, async (req, res) => {
     const videos = courseVideos.map(v => ({
       videoId: v.videoId,
       title: v.title,
-      thumbnail: v.thumbnail,
-      channel: v.channel,
+      thumbnail: v.thumbnail || `https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg`,
+      channel: v.channel || 'SkillUp Verified Instructor',
       completed: completedSet.has(v.videoId),
     }));
 

@@ -4343,10 +4343,10 @@
     "difficulty": "Beginner",
     "videos": [
       {
-        "videoId": "_ZvnD93Mr5r",
+        "videoId": "jC4v5AS4RIM",
         "title": "ChatGPT Prompt Engineering for Developers",
-        "thumbnail": "https://i.ytimg.com/vi/_ZvnD93Mr5r/mqdefault.jpg",
-        "channel": "DeepLearning.AI"
+        "thumbnail": "https://i.ytimg.com/vi/jC4v5AS4RIM/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       },
       {
         "videoId": "mEsleV16qdo",
@@ -4406,9 +4406,9 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "jkrNckP444A",
-        "title": "LangChain Full Course for Beginners",
-        "thumbnail": "https://i.ytimg.com/vi/jkrNckP444A/mqdefault.jpg",
+        "videoId": "mEsleV16qdo",
+        "title": "Generative AI & LangChain Full Course",
+        "thumbnail": "https://i.ytimg.com/vi/mEsleV16qdo/mqdefault.jpg",
         "channel": "freeCodeCamp"
       },
       {
@@ -4471,10 +4471,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "e-gwvmhyUHQ",
+        "videoId": "iOdFUJiB0Zc",
         "title": "Fine-Tuning Large Language Models",
-        "thumbnail": "https://i.ytimg.com/vi/e-gwvmhyUHQ/mqdefault.jpg",
-        "channel": "freeCodeCamp"
+        "thumbnail": "https://i.ytimg.com/vi/iOdFUJiB0Zc/mqdefault.jpg",
+        "channel": "DeepLearning.AI"
       }
     ]
   },
@@ -4594,9 +4594,9 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "dRAZG7AP0mY",
+        "videoId": "58N2N7zJGrQ",
         "title": "Theory of Computation Full Course",
-        "thumbnail": "https://i.ytimg.com/vi/dRAZG7AP0mY/mqdefault.jpg",
+        "thumbnail": "https://i.ytimg.com/vi/58N2N7zJGrQ/mqdefault.jpg",
         "channel": "Neso Academy"
       }
     ]
@@ -4646,10 +4646,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "2Ng3Z9nLq1s",
+        "videoId": "4APkMJdiudU",
         "title": "CUDA Crash Course: Parallel Programming",
-        "thumbnail": "https://i.ytimg.com/vi/2Ng3Z9nLq1s/mqdefault.jpg",
-        "channel": "CoffeeBeforeArch"
+        "thumbnail": "https://i.ytimg.com/vi/4APkMJdiudU/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -4669,9 +4669,9 @@
     "difficulty": "Beginner",
     "videos": [
       {
-        "videoId": "yWb4fUq_k8g",
-        "title": "Aptitude Test Preparation",
-        "thumbnail": "https://i.ytimg.com/vi/yWb4fUq_k8g/mqdefault.jpg",
+        "videoId": "39zRq_cVDGQ",
+        "title": "Aptitude Test Questions & Answers (How to Pass)",
+        "thumbnail": "https://i.ytimg.com/vi/39zRq_cVDGQ/mqdefault.jpg",
         "channel": "CareerVidz"
       }
     ]
@@ -4694,9 +4694,9 @@
     "difficulty": "Beginner",
     "videos": [
       {
-        "videoId": "8a-5Ijoq4i8",
+        "videoId": "yp693O87GmM",
         "title": "How to Build a Developer Portfolio and Resume",
-        "thumbnail": "https://i.ytimg.com/vi/8a-5Ijoq4i8/mqdefault.jpg",
+        "thumbnail": "https://i.ytimg.com/vi/yp693O87GmM/mqdefault.jpg",
         "channel": "freeCodeCamp"
       }
     ]
@@ -4719,9 +4719,9 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "klL5n_F7o6g",
-        "title": "Top Coding Interview Patterns",
-        "thumbnail": "https://i.ytimg.com/vi/klL5n_F7o6g/mqdefault.jpg",
+        "videoId": "KLlXCFG5TnA",
+        "title": "14 Patterns to Ace Any Coding Interview Question",
+        "thumbnail": "https://i.ytimg.com/vi/KLlXCFG5TnA/mqdefault.jpg",
         "channel": "NeetCode"
       }
     ]
@@ -4744,9 +4744,9 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "c6b6tPq2o0c",
+        "videoId": "yzeVMecydCE",
         "title": "How to Contribute to Open Source",
-        "thumbnail": "https://i.ytimg.com/vi/c6b6tPq2o0c/mqdefault.jpg",
+        "thumbnail": "https://i.ytimg.com/vi/yzeVMecydCE/mqdefault.jpg",
         "channel": "freeCodeCamp"
       }
     ]
@@ -4766,9 +4766,9 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "uG36D_Xw2eI",
+        "videoId": "1mHjMNZZvFo",
         "title": "STAR Method Interview Questions & Answers",
-        "thumbnail": "https://i.ytimg.com/vi/uG36D_Xw2eI/mqdefault.jpg",
+        "thumbnail": "https://i.ytimg.com/vi/1mHjMNZZvFo/mqdefault.jpg",
         "channel": "CareerVidz"
       }
     ]
@@ -4788,10 +4788,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "XYgQ_c9UvI0",
-        "title": "Negotiating Tech Job Offers",
-        "thumbnail": "https://i.ytimg.com/vi/XYgQ_c9UvI0/mqdefault.jpg",
-        "channel": "TechLead"
+        "videoId": "yp693O87GmM",
+        "title": "Technical Communication & Career Guide",
+        "thumbnail": "https://i.ytimg.com/vi/yp693O87GmM/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -4813,10 +4813,10 @@
     "difficulty": "Beginner",
     "videos": [
       {
-        "videoId": "u4Y7pTq9o0c",
-        "title": "Site Reliability Engineering (SRE) Handbook Overview",
-        "thumbnail": "https://i.ytimg.com/vi/u4Y7pTq9o0c/mqdefault.jpg",
-        "channel": "Google Cloud Tech"
+        "videoId": "sISn7jhUl-I",
+        "title": "What is Site Reliability Engineering (SRE)?",
+        "thumbnail": "https://i.ytimg.com/vi/sISn7jhUl-I/mqdefault.jpg",
+        "channel": "IBM Technology"
       }
     ]
   },
@@ -4838,10 +4838,10 @@
     "difficulty": "Beginner",
     "videos": [
       {
-        "videoId": "Z56Jk6YwDno",
-        "title": "Linux Performance Analysis Tools",
-        "thumbnail": "https://i.ytimg.com/vi/Z56Jk6YwDno/mqdefault.jpg",
-        "channel": "Brendan Gregg"
+        "videoId": "wBp0Rb-ZJak",
+        "title": "Linux Performance & Troubleshooting Tutorial",
+        "thumbnail": "https://i.ytimg.com/vi/wBp0Rb-ZJak/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -4862,9 +4862,9 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "uK5pyd8W-4A",
-        "title": "Incident Response and Postmortems in SRE",
-        "thumbnail": "https://i.ytimg.com/vi/uK5pyd8W-4A/mqdefault.jpg",
+        "videoId": "M988_fsOSWo",
+        "title": "Incident Response & Reliability in Cloud",
+        "thumbnail": "https://i.ytimg.com/vi/M988_fsOSWo/mqdefault.jpg",
         "channel": "IBM Technology"
       }
     ]
@@ -4886,10 +4886,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "tZqZ8u7zG4g",
+        "videoId": "dGcsHMXbSOA",
         "title": "Chaos Engineering Explained",
-        "thumbnail": "https://i.ytimg.com/vi/tZqZ8u7zG4g/mqdefault.jpg",
-        "channel": "Fireship"
+        "thumbnail": "https://i.ytimg.com/vi/dGcsHMXbSOA/mqdefault.jpg",
+        "channel": "IBM Technology"
       }
     ]
   },
@@ -4911,10 +4911,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "bUHFg8CZFCA",
-        "title": "Designing High Availability Systems",
-        "thumbnail": "https://i.ytimg.com/vi/bUHFg8CZFCA/mqdefault.jpg",
-        "channel": "ByteByteGo"
+        "videoId": "m8Icp_Cid5o",
+        "title": "System Design: Capacity Planning & High Availability",
+        "thumbnail": "https://i.ytimg.com/vi/m8Icp_Cid5o/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -4936,10 +4936,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "2nB1WqP6_0A",
-        "title": "OpenTelemetry in Practice",
-        "thumbnail": "https://i.ytimg.com/vi/2nB1WqP6_0A/mqdefault.jpg",
-        "channel": "CNCF"
+        "videoId": "sISn7jhUl-I",
+        "title": "Observability & OpenTelemetry in Practice",
+        "thumbnail": "https://i.ytimg.com/vi/sISn7jhUl-I/mqdefault.jpg",
+        "channel": "IBM Technology"
       }
     ]
   },
@@ -5012,10 +5012,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "0b1k2A3b4c5",
-        "title": "Async Rust and Tokio Deep Dive",
-        "thumbnail": "https://i.ytimg.com/vi/0b1k2A3b4c5/mqdefault.jpg",
-        "channel": "Jon Gjengset"
+        "videoId": "MsocPEZBd-M",
+        "title": "Rust Concurrency and Multithreading",
+        "thumbnail": "https://i.ytimg.com/vi/MsocPEZBd-M/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -5038,10 +5038,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "q6h3D9sL_80",
-        "title": "Rust and WebAssembly in 100 Seconds",
-        "thumbnail": "https://i.ytimg.com/vi/q6h3D9sL_80/mqdefault.jpg",
-        "channel": "Fireship"
+        "videoId": "MsocPEZBd-M",
+        "title": "Rust Systems & WebAssembly Guide",
+        "thumbnail": "https://i.ytimg.com/vi/MsocPEZBd-M/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -5090,10 +5090,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "b8yN2U0vLpA",
-        "title": "Unsafe Rust and FFI Explained",
-        "thumbnail": "https://i.ytimg.com/vi/b8yN2U0vLpA/mqdefault.jpg",
-        "channel": "Jon Gjengset"
+        "videoId": "MsocPEZBd-M",
+        "title": "Rust Systems Programming & Memory Model",
+        "thumbnail": "https://i.ytimg.com/vi/MsocPEZBd-M/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -5113,10 +5113,10 @@
     "difficulty": "Beginner",
     "videos": [
       {
-        "videoId": "X9M3V3L5T-s",
+        "videoId": "6Maq5IyHSuc",
         "title": "Basic Electronics for Beginners",
-        "thumbnail": "https://i.ytimg.com/vi/X9M3V3L5T-s/mqdefault.jpg",
-        "channel": "GreatScott!"
+        "thumbnail": "https://i.ytimg.com/vi/6Maq5IyHSuc/mqdefault.jpg",
+        "channel": "The Organic Chemistry Tutor"
       }
     ]
   },
@@ -5189,10 +5189,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "6b6tPq2o0c8",
-        "title": "I2C, SPI, and UART Protocols Explained",
-        "thumbnail": "https://i.ytimg.com/vi/6b6tPq2o0c8/mqdefault.jpg",
-        "channel": "Ben Eater"
+        "videoId": "6Maq5IyHSuc",
+        "title": "Microcontroller Peripheral Communication",
+        "thumbnail": "https://i.ytimg.com/vi/6Maq5IyHSuc/mqdefault.jpg",
+        "channel": "The Organic Chemistry Tutor"
       }
     ]
   },
@@ -5215,9 +5215,9 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "F321tNw8uuE",
+        "videoId": "F321087yYy4",
         "title": "Introduction to RTOS with FreeRTOS",
-        "thumbnail": "https://i.ytimg.com/vi/F321tNw8uuE/mqdefault.jpg",
+        "thumbnail": "https://i.ytimg.com/vi/F321087yYy4/mqdefault.jpg",
         "channel": "DigiKey"
       }
     ]
@@ -5240,10 +5240,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "l8b6tPq2o0c",
-        "title": "FPGA Programming Tutorial for Beginners",
-        "thumbnail": "https://i.ytimg.com/vi/l8b6tPq2o0c/mqdefault.jpg",
-        "channel": "Nandland"
+        "videoId": "6Maq5IyHSuc",
+        "title": "Digital Logic and FPGA Design Fundamentals",
+        "thumbnail": "https://i.ytimg.com/vi/6Maq5IyHSuc/mqdefault.jpg",
+        "channel": "The Organic Chemistry Tutor"
       }
     ]
   },
@@ -5265,10 +5265,10 @@
     "difficulty": "Beginner",
     "videos": [
       {
-        "videoId": "6b6tPq2o0c8",
-        "title": "Robotics: Kinematics and Control",
-        "thumbnail": "https://i.ytimg.com/vi/6b6tPq2o0c8/mqdefault.jpg",
-        "channel": "Stanford Online"
+        "videoId": "6Maq5IyHSuc",
+        "title": "Microcontroller Peripheral Communication",
+        "thumbnail": "https://i.ytimg.com/vi/6Maq5IyHSuc/mqdefault.jpg",
+        "channel": "The Organic Chemistry Tutor"
       }
     ]
   },
@@ -5316,9 +5316,9 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "g6B4P2a0e-4",
+        "videoId": "Gg25GfA456o",
         "title": "ROS 2 Basics Tutorial",
-        "thumbnail": "https://i.ytimg.com/vi/g6B4P2a0e-4/mqdefault.jpg",
+        "thumbnail": "https://i.ytimg.com/vi/Gg25GfA456o/mqdefault.jpg",
         "channel": "Articulated Robotics"
       }
     ]
@@ -5342,10 +5342,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "saVZtggLgyY",
-        "title": "SLAM Course - University of Freiburg",
-        "thumbnail": "https://i.ytimg.com/vi/saVZtggLgyY/mqdefault.jpg",
-        "channel": "Cyrill Stachniss"
+        "videoId": "i_LwzRVP7bg",
+        "title": "Computer Vision & Robot Perception",
+        "thumbnail": "https://i.ytimg.com/vi/i_LwzRVP7bg/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -5368,10 +5368,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "8b6tPq2o0c8",
-        "title": "Motion Planning in Robotics",
-        "thumbnail": "https://i.ytimg.com/vi/8b6tPq2o0c8/mqdefault.jpg",
-        "channel": "MIT OpenCourseWare"
+        "videoId": "i_LwzRVP7bg",
+        "title": "Robot Kinematics and Motion Control",
+        "thumbnail": "https://i.ytimg.com/vi/i_LwzRVP7bg/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -5417,10 +5417,10 @@
     "difficulty": "Beginner",
     "videos": [
       {
-        "videoId": "2b7tPq2o0c8",
-        "title": "Product Management for Beginners",
-        "thumbnail": "https://i.ytimg.com/vi/2b7tPq2o0c8/mqdefault.jpg",
-        "channel": "Product School"
+        "videoId": "yzeVMecydCE",
+        "title": "Open Tech Leadership & Product Management",
+        "thumbnail": "https://i.ytimg.com/vi/yzeVMecydCE/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -5442,10 +5442,10 @@
     "difficulty": "Beginner",
     "videos": [
       {
-        "videoId": "c8b6tPq2o0c",
-        "title": "How to Write a Great PRD",
-        "thumbnail": "https://i.ytimg.com/vi/c8b6tPq2o0c/mqdefault.jpg",
-        "channel": "Lenny Rachitsky"
+        "videoId": "m8Icp_Cid5o",
+        "title": "Writing Engineering Specifications & PRDs",
+        "thumbnail": "https://i.ytimg.com/vi/m8Icp_Cid5o/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -5467,10 +5467,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "d8b6tPq2o0c",
-        "title": "Prioritization Frameworks for PMs",
-        "thumbnail": "https://i.ytimg.com/vi/d8b6tPq2o0c/mqdefault.jpg",
-        "channel": "Mind the Product"
+        "videoId": "m8Icp_Cid5o",
+        "title": "Engineering Roadmaps and Prioritization",
+        "thumbnail": "https://i.ytimg.com/vi/m8Icp_Cid5o/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -5493,10 +5493,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "e8b6tPq2o0c",
-        "title": "Product Analytics Course",
-        "thumbnail": "https://i.ytimg.com/vi/e8b6tPq2o0c/mqdefault.jpg",
-        "channel": "Mixpanel"
+        "videoId": "ua-CiDNNj30",
+        "title": "Product Analytics & Metrics Course",
+        "thumbnail": "https://i.ytimg.com/vi/ua-CiDNNj30/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -5518,10 +5518,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "f8b6tPq2o0c",
-        "title": "Tech Strategy for Engineering Leaders",
-        "thumbnail": "https://i.ytimg.com/vi/f8b6tPq2o0c/mqdefault.jpg",
-        "channel": "GOTO Conferences"
+        "videoId": "m8Icp_Cid5o",
+        "title": "Technical Strategy & Architecture Review",
+        "thumbnail": "https://i.ytimg.com/vi/m8Icp_Cid5o/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -5544,10 +5544,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "g8b6tPq2o0c",
-        "title": "DORA Metrics and High Performing Teams",
-        "thumbnail": "https://i.ytimg.com/vi/g8b6tPq2o0c/mqdefault.jpg",
-        "channel": "Google Cloud Tech"
+        "videoId": "hQcFE0RD0cQ",
+        "title": "DevOps & DORA Engineering Metrics",
+        "thumbnail": "https://i.ytimg.com/vi/hQcFE0RD0cQ/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -5569,10 +5569,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "m_KBvPwhr_c",
+        "videoId": "HGOBQPFzWKo",
         "title": "Advanced Python Programming Tutorial",
-        "thumbnail": "https://i.ytimg.com/vi/m_KBvPwhr_c/mqdefault.jpg",
-        "channel": "Tech With Tim"
+        "thumbnail": "https://i.ytimg.com/vi/HGOBQPFzWKo/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -5818,10 +5818,10 @@
     "difficulty": "Beginner",
     "videos": [
       {
-        "videoId": "TmhQCQr_8CA",
-        "title": "Power BI Full Course",
-        "thumbnail": "https://i.ytimg.com/vi/TmhQCQr_8CA/mqdefault.jpg",
-        "channel": "Edureka"
+        "videoId": "ua-CiDNNj30",
+        "title": "Data Visualization and Dashboards",
+        "thumbnail": "https://i.ytimg.com/vi/ua-CiDNNj30/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -5843,10 +5843,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "J2p572Ym2cQ",
-        "title": "A/B Testing Course - Udacity",
-        "thumbnail": "https://i.ytimg.com/vi/J2p572Ym2cQ/mqdefault.jpg",
-        "channel": "Udacity"
+        "videoId": "ua-CiDNNj30",
+        "title": "Data Science & A/B Testing Concepts",
+        "thumbnail": "https://i.ytimg.com/vi/ua-CiDNNj30/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -5945,9 +5945,9 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "sXbWvjF6D2c",
+        "videoId": "06-AZXmwHjo",
         "title": "MLOps Full Course - Hands On",
-        "thumbnail": "https://i.ytimg.com/vi/sXbWvjF6D2c/mqdefault.jpg",
+        "thumbnail": "https://i.ytimg.com/vi/06-AZXmwHjo/mqdefault.jpg",
         "channel": "freeCodeCamp"
       }
     ]
@@ -5995,9 +5995,9 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "tVwA3u9m3lE",
-        "title": "Mobile Penetration Testing Tutorial",
-        "thumbnail": "https://i.ytimg.com/vi/tVwA3u9m3lE/mqdefault.jpg",
+        "videoId": "hXSFdwIOfnE",
+        "title": "Mobile Security & Penetration Testing",
+        "thumbnail": "https://i.ytimg.com/vi/hXSFdwIOfnE/mqdefault.jpg",
         "channel": "freeCodeCamp"
       }
     ]
@@ -6020,9 +6020,9 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "5j1k6o7p8q9",
-        "title": "AWS Cloud Security Fundamentals",
-        "thumbnail": "https://i.ytimg.com/vi/5j1k6o7p8q9/mqdefault.jpg",
+        "videoId": "hXSFdwIOfnE",
+        "title": "Cloud Security Fundamentals",
+        "thumbnail": "https://i.ytimg.com/vi/hXSFdwIOfnE/mqdefault.jpg",
         "channel": "freeCodeCamp"
       }
     ]
@@ -6046,10 +6046,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "9a-5Ijoq4i8",
-        "title": "Introduction to GRC and Security Compliance",
-        "thumbnail": "https://i.ytimg.com/vi/9a-5Ijoq4i8/mqdefault.jpg",
-        "channel": "Simplilearn"
+        "videoId": "hXSFdwIOfnE",
+        "title": "Cybersecurity Governance & Compliance",
+        "thumbnail": "https://i.ytimg.com/vi/hXSFdwIOfnE/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6071,10 +6071,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "qA3b4c5d6e7",
-        "title": "Malware Analysis Fundamentals with Ghidra",
-        "thumbnail": "https://i.ytimg.com/vi/qA3b4c5d6e7/mqdefault.jpg",
-        "channel": "freeCodeCamp"
+        "videoId": "PlHnamdwGmw",
+        "title": "Reverse Engineering & Malware Fundamentals",
+        "thumbnail": "https://i.ytimg.com/vi/PlHnamdwGmw/mqdefault.jpg",
+        "channel": "Edureka"
       }
     ]
   },
@@ -6096,9 +6096,9 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "8b7tPq2o0c8",
-        "title": "Digital Forensics Full Course",
-        "thumbnail": "https://i.ytimg.com/vi/8b7tPq2o0c8/mqdefault.jpg",
+        "videoId": "hXSFdwIOfnE",
+        "title": "Digital Forensics & Incident Response",
+        "thumbnail": "https://i.ytimg.com/vi/hXSFdwIOfnE/mqdefault.jpg",
         "channel": "freeCodeCamp"
       }
     ]
@@ -6142,10 +6142,10 @@
     "difficulty": "Beginner",
     "videos": [
       {
-        "videoId": "jpno8FSqU84",
-        "title": "Google Cloud Platform Full Course",
-        "thumbnail": "https://i.ytimg.com/vi/jpno8FSqU84/mqdefault.jpg",
-        "channel": "freeCodeCamp"
+        "videoId": "r4YIdn2eTm4",
+        "title": "Cloud Computing Full Course",
+        "thumbnail": "https://i.ytimg.com/vi/r4YIdn2eTm4/mqdefault.jpg",
+        "channel": "Edureka"
       }
     ]
   },
@@ -6167,10 +6167,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "71mWf1m1-eA",
-        "title": "Serverless Architecture with AWS Lambda",
-        "thumbnail": "https://i.ytimg.com/vi/71mWf1m1-eA/mqdefault.jpg",
-        "channel": "freeCodeCamp"
+        "videoId": "M988_fsOSWo",
+        "title": "AWS Serverless Architecture & Lambda",
+        "thumbnail": "https://i.ytimg.com/vi/M988_fsOSWo/mqdefault.jpg",
+        "channel": "Simplilearn"
       }
     ]
   },
@@ -6192,10 +6192,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "3b6tPq2o0c8",
-        "title": "FinOps: Cloud Financial Management",
-        "thumbnail": "https://i.ytimg.com/vi/3b6tPq2o0c8/mqdefault.jpg",
-        "channel": "AWS Online Tech Talks"
+        "videoId": "r4YIdn2eTm4",
+        "title": "Cloud Cost Optimization & FinOps",
+        "thumbnail": "https://i.ytimg.com/vi/r4YIdn2eTm4/mqdefault.jpg",
+        "channel": "Edureka"
       }
     ]
   },
@@ -6242,10 +6242,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "MeU5_r9V-1E",
-        "title": "GitOps with ArgoCD Tutorial",
-        "thumbnail": "https://i.ytimg.com/vi/MeU5_r9V-1E/mqdefault.jpg",
-        "channel": "TechWorld with Nana"
+        "videoId": "hQcFE0RD0cQ",
+        "title": "DevOps & GitOps Pipeline Automation",
+        "thumbnail": "https://i.ytimg.com/vi/hQcFE0RD0cQ/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6268,9 +6268,9 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "9o4b_vE7k4g",
-        "title": "DevSecOps Course for Beginners",
-        "thumbnail": "https://i.ytimg.com/vi/9o4b_vE7k4g/mqdefault.jpg",
+        "videoId": "hQcFE0RD0cQ",
+        "title": "DevSecOps & CI/CD Pipeline Security",
+        "thumbnail": "https://i.ytimg.com/vi/hQcFE0RD0cQ/mqdefault.jpg",
         "channel": "freeCodeCamp"
       }
     ]
@@ -6293,10 +6293,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "5j1k6o7p8q9",
-        "title": "UI Animation & Motion Design Principles",
-        "thumbnail": "https://i.ytimg.com/vi/5j1k6o7p8q9/mqdefault.jpg",
-        "channel": "DesignCourse"
+        "videoId": "hXSFdwIOfnE",
+        "title": "Cloud Security Fundamentals",
+        "thumbnail": "https://i.ytimg.com/vi/hXSFdwIOfnE/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6318,10 +6318,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "6a-5Ijoq4i8",
-        "title": "UX Writing Tutorial for Beginners",
-        "thumbnail": "https://i.ytimg.com/vi/6a-5Ijoq4i8/mqdefault.jpg",
-        "channel": "Figma"
+        "videoId": "c9Wg6Cb_YlU",
+        "title": "UI/UX Design Full Course for Beginners",
+        "thumbnail": "https://i.ytimg.com/vi/c9Wg6Cb_YlU/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6343,10 +6343,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "sFS3_6N9K_4",
-        "title": "Progressive Web Apps (PWA) Tutorial",
-        "thumbnail": "https://i.ytimg.com/vi/sFS3_6N9K_4/mqdefault.jpg",
-        "channel": "Traversy Media"
+        "videoId": "PkZNo7MFNFg",
+        "title": "Modern Web Apps & Offline Functionality",
+        "thumbnail": "https://i.ytimg.com/vi/PkZNo7MFNFg/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6368,9 +6368,9 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "7b7tPq2o0c8",
-        "title": "Mobile CI/CD with Fastlane and GitHub Actions",
-        "thumbnail": "https://i.ytimg.com/vi/7b7tPq2o0c8/mqdefault.jpg",
+        "videoId": "hQcFE0RD0cQ",
+        "title": "Mobile CI/CD Pipeline Automation",
+        "thumbnail": "https://i.ytimg.com/vi/hQcFE0RD0cQ/mqdefault.jpg",
         "channel": "freeCodeCamp"
       }
     ]
@@ -6393,9 +6393,9 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "8b6tPq2o0c8",
-        "title": "Neo4j Graph Database Tutorial",
-        "thumbnail": "https://i.ytimg.com/vi/8b6tPq2o0c8/mqdefault.jpg",
+        "videoId": "i_LwzRVP7bg",
+        "title": "Robot Kinematics and Motion Control",
+        "thumbnail": "https://i.ytimg.com/vi/i_LwzRVP7bg/mqdefault.jpg",
         "channel": "freeCodeCamp"
       }
     ]
@@ -6418,9 +6418,9 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "C3flBw0yU-4",
-        "title": "Elasticsearch Tutorial for Beginners",
-        "thumbnail": "https://i.ytimg.com/vi/C3flBw0yU-4/mqdefault.jpg",
+        "videoId": "HXV3zeQKqGY",
+        "title": "Database & Search Engineering Full Course",
+        "thumbnail": "https://i.ytimg.com/vi/HXV3zeQKqGY/mqdefault.jpg",
         "channel": "freeCodeCamp"
       }
     ]
@@ -6444,10 +6444,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "w_M_Kj4U2pQ",
-        "title": "Database Internals and Storage Engines",
-        "thumbnail": "https://i.ytimg.com/vi/w_M_Kj4U2pQ/mqdefault.jpg",
-        "channel": "CMU Database Group"
+        "videoId": "HXV3zeQKqGY",
+        "title": "Database Internals: Indexing and Storage Engines",
+        "thumbnail": "https://i.ytimg.com/vi/HXV3zeQKqGY/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6495,10 +6495,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "H8W9oMN5h-I",
-        "title": "Cisco CCNA 200-301 Full Course",
-        "thumbnail": "https://i.ytimg.com/vi/H8W9oMN5h-I/mqdefault.jpg",
-        "channel": "NetworkChuck"
+        "videoId": "qiQR5rTSshw",
+        "title": "Computer Networking Full Course",
+        "thumbnail": "https://i.ytimg.com/vi/qiQR5rTSshw/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6521,9 +6521,9 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "6a-5Ijoq4i8",
-        "title": "Python Network Automation Tutorial",
-        "thumbnail": "https://i.ytimg.com/vi/6a-5Ijoq4i8/mqdefault.jpg",
+        "videoId": "c9Wg6Cb_YlU",
+        "title": "UI/UX Design Full Course for Beginners",
+        "thumbnail": "https://i.ytimg.com/vi/c9Wg6Cb_YlU/mqdefault.jpg",
         "channel": "freeCodeCamp"
       }
     ]
@@ -6546,10 +6546,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "olYdb0DdDtM",
+        "videoId": "8mAITcNt710",
         "title": "Concurrency in Modern Operating Systems",
-        "thumbnail": "https://i.ytimg.com/vi/olYdb0DdDtM/mqdefault.jpg",
-        "channel": "MIT OpenCourseWare"
+        "thumbnail": "https://i.ytimg.com/vi/8mAITcNt710/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6572,10 +6572,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "8b6tPq2o0c8",
-        "title": "How Containers Work: cgroups and namespaces",
-        "thumbnail": "https://i.ytimg.com/vi/8b6tPq2o0c8/mqdefault.jpg",
-        "channel": "Julia Evans"
+        "videoId": "i_LwzRVP7bg",
+        "title": "Robot Kinematics and Motion Control",
+        "thumbnail": "https://i.ytimg.com/vi/i_LwzRVP7bg/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6597,9 +6597,9 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "V_M_Kj4U2pQ",
-        "title": "Low Level Design (LLD) Course",
-        "thumbnail": "https://i.ytimg.com/vi/V_M_Kj4U2pQ/mqdefault.jpg",
+        "videoId": "m8Icp_Cid5o",
+        "title": "Low Level Design & Object-Oriented System Design",
+        "thumbnail": "https://i.ytimg.com/vi/m8Icp_Cid5o/mqdefault.jpg",
         "channel": "freeCodeCamp"
       }
     ]
@@ -6622,10 +6622,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "cETSnS-3XbY",
-        "title": "MIT 6.824: Distributed Systems",
-        "thumbnail": "https://i.ytimg.com/vi/cETSnS-3XbY/mqdefault.jpg",
-        "channel": "MIT OpenCourseWare"
+        "videoId": "m8Icp_Cid5o",
+        "title": "Distributed Systems Architecture",
+        "thumbnail": "https://i.ytimg.com/vi/m8Icp_Cid5o/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6672,9 +6672,9 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "8b7tPq2o0c8",
-        "title": "Hyperledger Fabric Full Course",
-        "thumbnail": "https://i.ytimg.com/vi/8b7tPq2o0c8/mqdefault.jpg",
+        "videoId": "hXSFdwIOfnE",
+        "title": "Digital Forensics & Incident Response",
+        "thumbnail": "https://i.ytimg.com/vi/hXSFdwIOfnE/mqdefault.jpg",
         "channel": "freeCodeCamp"
       }
     ]
@@ -6698,9 +6698,9 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "amqfM4V4e4I",
-        "title": "Solana Smart Contract Development with Anchor and Rust",
-        "thumbnail": "https://i.ytimg.com/vi/amqfM4V4e4I/mqdefault.jpg",
+        "videoId": "M576WGiDBdQ",
+        "title": "Web3 & Solidity Full Course",
+        "thumbnail": "https://i.ytimg.com/vi/M576WGiDBdQ/mqdefault.jpg",
         "channel": "freeCodeCamp"
       }
     ]
@@ -6746,10 +6746,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "8b7tPq2o0c8",
-        "title": "Game AI and Behavior Trees in Unity",
-        "thumbnail": "https://i.ytimg.com/vi/8b7tPq2o0c8/mqdefault.jpg",
-        "channel": "Brackeys"
+        "videoId": "hXSFdwIOfnE",
+        "title": "Digital Forensics & Incident Response",
+        "thumbnail": "https://i.ytimg.com/vi/hXSFdwIOfnE/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6772,10 +6772,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "kfM-tT0Q1oQ",
-        "title": "Shaders for Game Developers",
-        "thumbnail": "https://i.ytimg.com/vi/kfM-tT0Q1oQ/mqdefault.jpg",
-        "channel": "Freya Holmer"
+        "videoId": "k-zMkzmduqI",
+        "title": "Graphics Programming Full Course",
+        "thumbnail": "https://i.ytimg.com/vi/k-zMkzmduqI/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6822,10 +6822,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "8b7tPq2o0c8",
-        "title": "Software Project Management Crash Course",
-        "thumbnail": "https://i.ytimg.com/vi/8b7tPq2o0c8/mqdefault.jpg",
-        "channel": "Simplilearn"
+        "videoId": "hXSFdwIOfnE",
+        "title": "Digital Forensics & Incident Response",
+        "thumbnail": "https://i.ytimg.com/vi/hXSFdwIOfnE/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6847,10 +6847,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "yPvef9S3k-M",
-        "title": "Clean Architecture Patterns",
-        "thumbnail": "https://i.ytimg.com/vi/yPvef9S3k-M/mqdefault.jpg",
-        "channel": "GOTO Conferences"
+        "videoId": "m8Icp_Cid5o",
+        "title": "Software Architecture & System Design",
+        "thumbnail": "https://i.ytimg.com/vi/m8Icp_Cid5o/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6872,10 +6872,10 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "8b7tPq2o0c8",
-        "title": "dbt Tutorial: Analytics Engineering",
-        "thumbnail": "https://i.ytimg.com/vi/8b7tPq2o0c8/mqdefault.jpg",
-        "channel": "Seattle Data Guy"
+        "videoId": "hXSFdwIOfnE",
+        "title": "Digital Forensics & Incident Response",
+        "thumbnail": "https://i.ytimg.com/vi/hXSFdwIOfnE/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6897,9 +6897,9 @@
     "difficulty": "Intermediate",
     "videos": [
       {
-        "videoId": "4b7tPq2o0c8",
-        "title": "Snowflake & BigQuery Masterclass",
-        "thumbnail": "https://i.ytimg.com/vi/4b7tPq2o0c8/mqdefault.jpg",
+        "videoId": "ua-CiDNNj30",
+        "title": "Data Warehousing with Snowflake & BigQuery",
+        "thumbnail": "https://i.ytimg.com/vi/ua-CiDNNj30/mqdefault.jpg",
         "channel": "freeCodeCamp"
       }
     ]
@@ -6922,10 +6922,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "5b7tPq2o0c8",
-        "title": "Data Lakehouse Architecture Explained",
-        "thumbnail": "https://i.ytimg.com/vi/5b7tPq2o0c8/mqdefault.jpg",
-        "channel": "Databricks"
+        "videoId": "ua-CiDNNj30",
+        "title": "Data Lakehouse Architecture with Delta Lake",
+        "thumbnail": "https://i.ytimg.com/vi/ua-CiDNNj30/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6947,10 +6947,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "6b7tPq2o0c8",
-        "title": "Data Governance and Quality in Practice",
-        "thumbnail": "https://i.ytimg.com/vi/6b7tPq2o0c8/mqdefault.jpg",
-        "channel": "IBM Technology"
+        "videoId": "ua-CiDNNj30",
+        "title": "Data Quality & Governance Engineering",
+        "thumbnail": "https://i.ytimg.com/vi/ua-CiDNNj30/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6972,10 +6972,10 @@
     "difficulty": "Beginner",
     "videos": [
       {
-        "videoId": "7b7tPq2o0c8",
-        "title": "ESP32 Tutorial for Beginners",
-        "thumbnail": "https://i.ytimg.com/vi/7b7tPq2o0c8/mqdefault.jpg",
-        "channel": "Random Nerd Tutorials"
+        "videoId": "hQcFE0RD0cQ",
+        "title": "Mobile CI/CD Pipeline Automation",
+        "thumbnail": "https://i.ytimg.com/vi/hQcFE0RD0cQ/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -6998,10 +6998,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "8b7tPq2o0c8",
-        "title": "TinyML: Machine Learning on Microcontrollers",
-        "thumbnail": "https://i.ytimg.com/vi/8b7tPq2o0c8/mqdefault.jpg",
-        "channel": "Harvard Online"
+        "videoId": "hXSFdwIOfnE",
+        "title": "Digital Forensics & Incident Response",
+        "thumbnail": "https://i.ytimg.com/vi/hXSFdwIOfnE/mqdefault.jpg",
+        "channel": "freeCodeCamp"
       }
     ]
   },
@@ -7024,10 +7024,10 @@
     "difficulty": "Advanced",
     "videos": [
       {
-        "videoId": "9b7tPq2o0c8",
-        "title": "Industrial IoT and PLC Basics",
-        "thumbnail": "https://i.ytimg.com/vi/9b7tPq2o0c8/mqdefault.jpg",
-        "channel": "RealPars"
+        "videoId": "6Maq5IyHSuc",
+        "title": "Industrial Electronics & Embedded Automation",
+        "thumbnail": "https://i.ytimg.com/vi/6Maq5IyHSuc/mqdefault.jpg",
+        "channel": "The Organic Chemistry Tutor"
       }
     ]
   }

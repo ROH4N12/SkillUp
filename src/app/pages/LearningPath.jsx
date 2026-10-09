@@ -791,9 +791,15 @@ export default function LearningPath() {
                                   {/* Thumbnail */}
                                   <div className="flex-shrink-0 relative group">
                                     <img
-                                      src={video.thumbnail}
+                                      src={video.thumbnail || `https://i.ytimg.com/vi/${video.videoId}/mqdefault.jpg`}
                                       alt={video.title}
                                       className="w-28 h-16 object-cover rounded-md"
+                                      onError={(e) => {
+                                        if (!e.currentTarget.dataset.retried) {
+                                          e.currentTarget.dataset.retried = "true";
+                                          e.currentTarget.src = `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`;
+                                        }
+                                      }}
                                     />
                                     <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 rounded-md flex items-center justify-center transition-colors">
                                       <div className="w-9 h-9 rounded-full bg-white/90 dark:bg-white/80 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
