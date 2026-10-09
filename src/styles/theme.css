@@ -819,7 +819,7 @@ main,
 .glass-card,
 .glass-elevated,
 .glass-card-elevated {
-  contain: layout style paint;
+  contain: layout style;
 }
 
 /* Sidebar and header are fixed layout regions — isolate their paint layer */
@@ -837,4 +837,30 @@ header {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   scroll-behavior: auto; /* Don't apply smooth scrolling inside containers — only on html */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MOBILE PERFORMANCE & HARDWARE ACCELERATION
+   Reduces backdrop-filter GPU load on screens < 768px to guarantee
+   smooth 60-120fps touch scrolling on mobile devices.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .glass-subtle,
+  .glass-default,
+  .glass-card,
+  .glass-elevated,
+  .glass-card-elevated,
+  .glass-pill {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -15,7 +15,8 @@ import {
   ChevronUp, 
   ExternalLink, 
   Youtube,
-  Check
+  Check,
+  X
 } from "lucide-react";
 
 import { useFetch, apiCall } from "../hooks/useFetch";

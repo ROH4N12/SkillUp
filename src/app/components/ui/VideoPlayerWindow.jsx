@@ -307,12 +307,11 @@ export function VideoPlayerWindow({
             key={video.videoId}
             id={`yt-player-${video.videoId}`}
             ref={iframeRef}
-            src={`https://www.youtube.com/embed/${video.videoId}?enablejsapi=1&origin=${encodeURIComponent(
-              currentOrigin
-            )}&rel=0&modestbranding=1`}
+            src={`https://www.youtube.com/embed/${video.videoId}?enablejsapi=1&rel=0&modestbranding=1`}
             title={video.title}
             className="absolute inset-0 w-full h-full"
             frameBorder="0"
+            referrerPolicy="strict-origin-when-cross-origin"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
             onLoad={handleIframeLoaded}
