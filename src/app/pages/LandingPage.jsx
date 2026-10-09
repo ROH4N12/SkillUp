@@ -234,11 +234,11 @@ export default function LandingPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-xs">
-                        AT
+                        RH
                       </div>
                       <div>
                         <div className="text-[11px] font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400 font-accent">
-                          Trainer Console
+                          Trainer Track • Rohit
                         </div>
                         <h3 className="font-display font-bold text-base text-gray-900 dark:text-white leading-tight">
                           AI Cohort Alpha (Fall '26)

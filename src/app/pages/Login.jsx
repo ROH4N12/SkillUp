@@ -119,9 +119,9 @@ export default function Login() {
 
       if (!data) {
         const roleNames = {
-          learner: "Rohan Sharma",
-          trainer: "Atharva Joshi",
-          counselor: "Sayujya Verma"
+          learner: "Rohan",
+          trainer: "Rohit",
+          counselor: "Sayujya"
         };
         data = {
           token: `demo-token-${role}-${Date.now()}`,

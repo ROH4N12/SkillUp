@@ -238,7 +238,7 @@ export default function LearningPath() {
     }
   }, []);
 
-  const recipientName = user?.name || user?.username || (user?.email ? user.email.split('@')[0] : 'Rohan Sharma');
+  const recipientName = user?.name || user?.username || (user?.email ? user.email.split('@')[0] : 'Rohan');
 
   // Build stages from API data
   const stages = useMemo(() => pathData?.stages || [], [pathData]);

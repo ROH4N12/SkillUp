@@ -114,7 +114,7 @@ router.post('/demo-login', async (req, res) => {
 
     const demoProfiles = {
       learner: { name: 'Rohan (Learner)', email: 'rohan.learner@skillup.ai' },
-      trainer: { name: 'Atharva (Senior Trainer)', email: 'atharva.trainer@skillup.ai' },
+      trainer: { name: 'Rohit (Senior Trainer)', email: 'rohit.trainer@skillup.ai' },
       counselor: { name: 'Sayujya (Academic Counselor)', email: 'sayujya.counselor@skillup.ai' },
     };
 
