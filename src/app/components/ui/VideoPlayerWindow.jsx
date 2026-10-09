@@ -43,25 +43,10 @@ export function VideoPlayerWindow({
   const [autoCompletedNotice, setAutoCompletedNotice] = useState(false);
 
   const iframeRef = useRef(null);
-  const playerInstanceRef = useRef(null);
   const hasAutoCompletedRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
-
-  // Ensure YouTube IFrame API script is available
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.YT && window.YT.Player) return;
-
-    if (!document.getElementById("yt-iframe-api-script")) {
-      const script = document.createElement("script");
-      script.id = "yt-iframe-api-script";
-      script.src = "https://www.youtube.com/iframe_api";
-      script.async = true;
-      document.head.appendChild(script);
-    }
   }, []);
 
   // Reset video player states when switching to a different video
@@ -70,10 +55,10 @@ export function VideoPlayerWindow({
     setAutoCompletedNotice(false);
     hasAutoCompletedRef.current = false;
 
-    // Safety fallback: if iframe onLoad or YT onReady doesn't fire within 800ms, dismiss the loader
+    // Safety fallback: dismiss loading skeleton smoothly so player is always interactable
     const timer = setTimeout(() => {
       setIframeLoaded(true);
-    }, 800);
+    }, 600);
 
     return () => clearTimeout(timer);
   }, [video?.videoId]);
@@ -86,84 +71,23 @@ export function VideoPlayerWindow({
       hasAutoCompletedRef.current = true;
       setAutoCompletedNotice(true);
       if (typeof onToggleComplete === "function") {
-        // onToggleComplete expects (videoId, currentlyCompleted)
-        // passing false toggles it to true (completed)
         onToggleComplete(video.videoId, false);
       }
     }
   }, [video, onToggleComplete]);
 
-  // Set up official YouTube Player API listener
+  const handleVideoEndedRef = useRef(handleVideoEnded);
   useEffect(() => {
-    if (!isOpen || !video?.videoId) return;
+    handleVideoEndedRef.current = handleVideoEnded;
+  }, [handleVideoEnded]);
 
-    let isSubscribed = true;
-
-    const setupPlayer = () => {
-      if (!isSubscribed || !iframeRef.current || !window.YT || !window.YT.Player) return;
-
-      try {
-        if (playerInstanceRef.current && typeof playerInstanceRef.current.destroy === "function") {
-          try {
-            playerInstanceRef.current.destroy();
-          } catch (_) {}
-        }
-
-        playerInstanceRef.current = new window.YT.Player(iframeRef.current, {
-          events: {
-            onReady: () => {
-              setIframeLoaded(true);
-            },
-            onStateChange: (event) => {
-              // 0 represents YT.PlayerState.ENDED
-              if (event.data === 0) {
-                handleVideoEnded();
-              }
-            },
-          },
-        });
-      } catch (err) {
-        console.debug("YouTube player API initialization notice:", err);
-      }
-    };
-
-    if (window.YT && window.YT.Player) {
-      setupPlayer();
-    } else {
-      const intervalId = setInterval(() => {
-        if (window.YT && window.YT.Player) {
-          clearInterval(intervalId);
-          setupPlayer();
-        }
-      }, 400);
-
-      return () => {
-        isSubscribed = false;
-        clearInterval(intervalId);
-        if (playerInstanceRef.current && typeof playerInstanceRef.current.destroy === "function") {
-          try {
-            playerInstanceRef.current.destroy();
-          } catch (_) {}
-        }
-      };
-    }
-
-    return () => {
-      isSubscribed = false;
-      if (playerInstanceRef.current && typeof playerInstanceRef.current.destroy === "function") {
-        try {
-          playerInstanceRef.current.destroy();
-        } catch (_) {}
-      }
-    };
-  }, [isOpen, video?.videoId, iframeLoaded, handleVideoEnded]);
-
-  // Secondary layer: window message listener for YouTube postMessage events
+  // Non-destructive HTML5 postMessage listener for YouTube playback events
   useEffect(() => {
     if (!isOpen || !video?.videoId) return;
 
     const handleMessage = (event) => {
       try {
+        if (event.origin && !event.origin.includes("youtube.com")) return;
         const payload =
           typeof event.data === "string" ? JSON.parse(event.data) : event.data;
         if (!payload) return;
@@ -175,18 +99,16 @@ export function VideoPlayerWindow({
             payload.info &&
             payload.info.playerState === 0)
         ) {
-          handleVideoEnded();
+          handleVideoEndedRef.current();
         }
-      } catch (_) {
-        // Ignore non-JSON postMessage payloads from third-party scripts or extensions
-      }
+      } catch (_) {}
     };
 
     window.addEventListener("message", handleMessage);
     return () => {
       window.removeEventListener("message", handleMessage);
     };
-  }, [isOpen, video?.videoId, handleVideoEnded]);
+  }, [isOpen, video?.videoId]);
 
   // When iframe loads, notify it to start listening for postMessage events
   const handleIframeLoaded = () => {
@@ -320,11 +242,10 @@ export function VideoPlayerWindow({
             key={video.videoId}
             id={`yt-player-${video.videoId}`}
             ref={iframeRef}
-            src={`https://www.youtube.com/embed/${video.videoId}?enablejsapi=1&rel=0&modestbranding=1${currentOrigin ? `&origin=${encodeURIComponent(currentOrigin)}` : ""}`}
+            src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&enablejsapi=1&rel=0&modestbranding=1`}
             title={video.title}
             className="absolute inset-0 w-full h-full"
             frameBorder="0"
-            referrerPolicy="no-referrer-when-downgrade"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
             onLoad={handleIframeLoaded}
