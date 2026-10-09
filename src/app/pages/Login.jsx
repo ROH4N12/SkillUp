@@ -103,14 +103,32 @@ export default function Login() {
     try {
       setDemoRoleLoading(role);
       setError("");
-      const res = await fetch(getApiUrl('/api/auth/demo-login'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role })
-      });
+      let data = null;
+      try {
+        const res = await fetch(getApiUrl('/api/auth/demo-login'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role })
+        });
+        if (res.ok) {
+          data = await res.json();
+        }
+      } catch (networkErr) {
+        // Backend not reachable, fall back to offline demo credentials
+      }
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Demo login failed');
+      if (!data) {
+        const roleNames = {
+          learner: "Rohan Sharma",
+          trainer: "Atharva Joshi",
+          counselor: "Sayujya Verma"
+        };
+        data = {
+          token: `demo-token-${role}-${Date.now()}`,
+          role: role,
+          name: roleNames[role] || "Demo User"
+        };
+      }
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('userRole', data.role);

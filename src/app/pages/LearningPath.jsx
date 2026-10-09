@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { DashboardCard } from "../components/DashboardCard";
 import { ProgressBar } from "../components/ProgressBar";
 import { 
@@ -22,6 +22,7 @@ import { useFetch, apiCall } from "../hooks/useFetch";
 import { useToast } from "../contexts/ToastContext";
 import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
+import { CertificateModal } from "../components/ui/CertificateModal";
 import { Skeleton, SkeletonMetrics, SkeletonChart, SkeletonCourse } from "../components/ui/Skeleton";
 import { AccordionContent } from "../components/ui/AccordionContent";
 import { AlertDialog } from "../components/ui/HeroUIAlertDialog";
@@ -34,6 +35,7 @@ export default function LearningPath() {
   const { data: dashboardData, refetch: refetchDashboard } = useFetch('/api/learner/dashboard');
   const toast = useToast();
 
+  const [showCertificate, setShowCertificate] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generationStep, setGenerationStep] = useState(0);
@@ -273,6 +275,38 @@ export default function LearningPath() {
     };
   });
 
+  // Memoized user, skills, and credential ID for Phase 1 Certificate
+  const user = useMemo(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const recipientName = user?.name || user?.username || (user?.email ? user.email.split('@')[0] : 'Rohan Sharma');
+
+  const pathSkills = useMemo(() => {
+    if (!pathData) return ['Full-Stack Engineering', 'Architecture Design', 'System Integration'];
+    const skills = [];
+    if (Array.isArray(pathData.targetSkills) && pathData.targetSkills.length > 0) {
+      skills.push(...pathData.targetSkills);
+    }
+    stages.forEach(s => {
+      s.courses?.forEach(c => {
+        if (c.domain && !skills.includes(c.domain)) skills.push(c.domain);
+      });
+    });
+    return skills.length > 0 ? skills.slice(0, 6) : ['Full-Stack Engineering', 'Architecture Design', 'System Integration'];
+  }, [pathData, stages]);
+
+  const credentialId = useMemo(() => {
+    const rawId = pathData?._id ? String(pathData._id).slice(-4).toUpperCase() : '8492';
+    const tag = (pathData?.title || 'ENG').split(' ')[0].toUpperCase().slice(0, 4);
+    return `SKILL-2026-${tag}-${rawId}`;
+  }, [pathData]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -325,6 +359,20 @@ export default function LearningPath() {
               </AlertDialog.Backdrop>
             </AlertDialog>
           )}
+          {/* Phase 1 Downloadable Certificate Button */}
+          <Button
+            variant={overallProgress === 100 ? "primary" : "secondary"}
+            icon={Award}
+            onClick={() => setShowCertificate(true)}
+            className={
+              overallProgress === 100
+                ? "bg-gradient-to-r from-amber-500 via-amber-600 to-indigo-600 text-white shadow-lg shadow-amber-500/20 border-transparent hover:brightness-110 active:scale-95"
+                : "border-amber-500/40 text-amber-700 dark:text-amber-300 bg-amber-50/70 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-950/50"
+            }
+          >
+            {overallProgress === 100 ? "Claim Certificate" : "Certificate"}
+          </Button>
+
           <Button 
             variant="primary"
             icon={Sparkles}
@@ -450,6 +498,42 @@ export default function LearningPath() {
         )}
       </Modal>
 
+
+      {/* Celebratory Completion Banner (Phase 1 Certificate Reward) */}
+      {overallProgress === 100 && totalCourses > 0 && (
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500/15 via-purple-500/15 to-indigo-500/15 border border-amber-500/30 dark:border-amber-400/30 p-5 sm:p-6 shadow-lg backdrop-blur-sm">
+          <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 flex items-center justify-center flex-shrink-0 shadow-md shadow-amber-500/30">
+                <Award className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                    Track Complete
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">100% Mastery</span>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-1">
+                  Congratulations, {recipientName}! Your Official Credential is Ready
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-0.5">
+                  You have completed all milestones for <strong className="font-semibold text-gray-900 dark:text-white">{pathData?.title}</strong>. You can now download your high-resolution certificate or print as PDF.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="primary"
+              icon={Award}
+              onClick={() => setShowCertificate(true)}
+              className="bg-gradient-to-r from-amber-500 via-amber-600 to-indigo-600 text-white font-bold shadow-md shadow-amber-500/20 flex-shrink-0 hover:brightness-110"
+            >
+              Claim Certificate
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -829,6 +913,17 @@ export default function LearningPath() {
         hasPrev={playerVideoIdx > 0}
         hasNext={playerVideoIdx < playerVideos.length - 1}
         courseTitle={playerCourseTitle}
+      />
+
+      {/* ── Phase 1 Downloadable Certificate Modal ── */}
+      <CertificateModal
+        isOpen={showCertificate}
+        onClose={() => setShowCertificate(false)}
+        recipientName={recipientName}
+        pathTitle={pathData?.title || "Full-Stack AI Engineer"}
+        skills={pathSkills}
+        overallProgress={overallProgress}
+        credentialId={credentialId}
       />
     </div>
   );
