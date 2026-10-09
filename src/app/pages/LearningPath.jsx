@@ -228,54 +228,7 @@ export default function LearningPath() {
   const playerVideos = playerCourseId ? (courseVideos[playerCourseId] || []) : [];
   const currentPlayerVideo = playerVideos[playerVideoIdx] || null;
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <Skeleton className="h-7 w-64" />
-            <Skeleton className="h-4 w-96" />
-          </div>
-          <Skeleton className="h-10 w-36 rounded-xl" />
-        </div>
-        <SkeletonMetrics count={4} />
-        <SkeletonChart height="h-28" />
-        <SkeletonCourse count={3} />
-      </div>
-    );
-  }
-
-  // Build stages from API data
-  const stages = pathData?.stages || [];
-  const allCourses = stages.flatMap(s => s.courses || []);
-  const totalCourses = allCourses.length;
-  const completedCourses = allCourses.filter(c => c.status === "Completed").length;
-  const overallProgress = totalCourses ? Math.round((completedCourses / totalCourses) * 100) : 0;
-
-  // Find the course title for the player header (must be after allCourses)
-  const playerCourseTitle = playerCourseId
-    ? allCourses.find(c => c._id === playerCourseId)?.title || ''
-    : '';
-
-  // Build the roadmap from stages
-  const dynamicRoadmap = stages.map(stage => {
-    const stageCompleted = stage.courses.every(c => c.status === "Completed");
-    const stageInProgress = stage.courses.some(c => c.status === "In Progress" || c.status === "Completed");
-    return {
-      phase: stage.stageName,
-      status: stageCompleted ? "completed" : stageInProgress ? "in-progress" : "upcoming",
-      courses: stage.courses.map(c => ({
-        _id: c._id,
-        title: c.title,
-        domain: c.domain,
-        duration: c.duration || "Self-Paced",
-        progress: c.progress,
-        status: c.status === "Completed" ? "completed" : c.status === "In Progress" ? "in-progress" : "locked"
-      }))
-    };
-  });
-
-  // Memoized user, skills, and credential ID for Phase 1 Certificate
+  // Memoized user for certificate and greeting
   const user = useMemo(() => {
     try {
       const stored = localStorage.getItem('user');
@@ -287,6 +240,19 @@ export default function LearningPath() {
 
   const recipientName = user?.name || user?.username || (user?.email ? user.email.split('@')[0] : 'Rohan Sharma');
 
+  // Build stages from API data
+  const stages = useMemo(() => pathData?.stages || [], [pathData]);
+  const allCourses = useMemo(() => stages.flatMap(s => s.courses || []), [stages]);
+  const totalCourses = allCourses.length;
+  const completedCourses = allCourses.filter(c => c.status === "Completed").length;
+  const overallProgress = totalCourses ? Math.round((completedCourses / totalCourses) * 100) : 0;
+
+  // Find the course title for the player header
+  const playerCourseTitle = playerCourseId
+    ? allCourses.find(c => c._id === playerCourseId)?.title || ''
+    : '';
+
+  // Memoized skills and credential ID for Phase 1 Certificate
   const pathSkills = useMemo(() => {
     if (!pathData) return ['Full-Stack Engineering', 'Architecture Design', 'System Integration'];
     const skills = [];
@@ -306,6 +272,43 @@ export default function LearningPath() {
     const tag = (pathData?.title || 'ENG').split(' ')[0].toUpperCase().slice(0, 4);
     return `SKILL-2026-${tag}-${rawId}`;
   }, [pathData]);
+
+  // Build the roadmap from stages
+  const dynamicRoadmap = useMemo(() => {
+    return stages.map(stage => {
+      const stageCompleted = stage.courses?.every(c => c.status === "Completed");
+      const stageInProgress = stage.courses?.some(c => c.status === "In Progress" || c.status === "Completed");
+      return {
+        phase: stage.stageName,
+        status: stageCompleted ? "completed" : stageInProgress ? "in-progress" : "upcoming",
+        courses: (stage.courses || []).map(c => ({
+          _id: c._id,
+          title: c.title,
+          domain: c.domain,
+          duration: c.duration || "Self-Paced",
+          progress: c.progress,
+          status: c.status === "Completed" ? "completed" : c.status === "In Progress" ? "in-progress" : "locked"
+        }))
+      };
+    });
+  }, [stages]);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-64" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+          <Skeleton className="h-10 w-36 rounded-xl" />
+        </div>
+        <SkeletonMetrics count={4} />
+        <SkeletonChart height="h-28" />
+        <SkeletonCourse count={3} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
