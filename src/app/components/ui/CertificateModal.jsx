@@ -155,7 +155,7 @@ export function CertificateModal({
     }
   };
 
-  if (!isOpen || !mounted) return null;
+  if (!isOpen || !mounted || overallProgress < 100) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto print:p-0">

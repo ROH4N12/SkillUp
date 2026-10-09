@@ -362,19 +362,17 @@ export default function LearningPath() {
               </AlertDialog.Backdrop>
             </AlertDialog>
           )}
-          {/* Phase 1 Downloadable Certificate Button */}
-          <Button
-            variant={overallProgress === 100 ? "primary" : "secondary"}
-            icon={Award}
-            onClick={() => setShowCertificate(true)}
-            className={
-              overallProgress === 100
-                ? "bg-gradient-to-r from-amber-500 via-amber-600 to-indigo-600 text-white shadow-lg shadow-amber-500/20 border-transparent hover:brightness-110 active:scale-95"
-                : "border-amber-500/40 text-amber-700 dark:text-amber-300 bg-amber-50/70 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-950/50"
-            }
-          >
-            {overallProgress === 100 ? "Claim Certificate" : "Certificate"}
-          </Button>
+          {/* Phase 1 Downloadable Certificate Button - only visible when path is 100% completed */}
+          {overallProgress === 100 && totalCourses > 0 && (
+            <Button
+              variant="primary"
+              icon={Award}
+              onClick={() => setShowCertificate(true)}
+              className="bg-gradient-to-r from-amber-500 via-amber-600 to-indigo-600 text-white shadow-lg shadow-amber-500/20 border-transparent hover:brightness-110 active:scale-95"
+            >
+              Claim Certificate
+            </Button>
+          )}
 
           <Button 
             variant="primary"
@@ -918,16 +916,18 @@ export default function LearningPath() {
         courseTitle={playerCourseTitle}
       />
 
-      {/* ── Phase 1 Downloadable Certificate Modal ── */}
-      <CertificateModal
-        isOpen={showCertificate}
-        onClose={() => setShowCertificate(false)}
-        recipientName={recipientName}
-        pathTitle={pathData?.title || "Full-Stack AI Engineer"}
-        skills={pathSkills}
-        overallProgress={overallProgress}
-        credentialId={credentialId}
-      />
+      {/* ── Phase 1 Downloadable Certificate Modal (Only accessible upon 100% path completion) ── */}
+      {overallProgress === 100 && totalCourses > 0 && (
+        <CertificateModal
+          isOpen={showCertificate}
+          onClose={() => setShowCertificate(false)}
+          recipientName={recipientName}
+          pathTitle={pathData?.title || "Full-Stack AI Engineer"}
+          skills={pathSkills}
+          overallProgress={overallProgress}
+          credentialId={credentialId}
+        />
+      )}
     </div>
   );
 }

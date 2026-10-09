@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { GraduationCap, Mail, Lock, Eye, EyeOff, User, ArrowLeft, Sun, Moon } from "lucide-react";
+import { GraduationCap, Mail, Lock, Eye, EyeOff, User, ArrowLeft, Sun, Moon, Check, Sparkles } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { useGoogleLogin } from "@react-oauth/google";
 import { WavyBackground } from "../components/ui/blue-meshy-background";
@@ -20,6 +20,10 @@ export default function Login() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Google signin transition state
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [authSuccessData, setAuthSuccessData] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -68,6 +72,8 @@ export default function Login() {
 
   const handleGoogleSuccess = async (tokenResponse) => {
     try {
+      setGoogleLoading(true);
+      setError("");
       const { access_token } = tokenResponse;
       const res = await fetch(getApiUrl('/api/auth/google'), {
         method: 'POST',
@@ -77,6 +83,7 @@ export default function Login() {
       
       const data = await res.json();
       if (!res.ok) {
+        setGoogleLoading(false);
         setError(data.message || 'Google Authentication failed');
         return;
       }
@@ -85,17 +92,34 @@ export default function Login() {
       localStorage.setItem('userRole', data.role);
       localStorage.setItem('user', JSON.stringify({ name: data.name, role: data.role }));
       
-      if (data.role === 'counselor') {
-        navigate('/dashboard/counselor');
-      } else if (data.role === 'trainer') {
-        navigate('/dashboard/trainer');
-      } else {
-        navigate('/dashboard');
-      }
+      // Trigger the animated entrance and transition
+      setAuthSuccessData({
+        name: data.name,
+        role: data.role
+      });
+
+      const targetPath = data.role === 'counselor'
+        ? '/dashboard/counselor'
+        : data.role === 'trainer'
+          ? '/dashboard/trainer'
+          : '/dashboard';
+
+      setTimeout(() => {
+        navigate(targetPath);
+      }, 1500);
     } catch (err) {
+      setGoogleLoading(false);
       setError('Network error during Google login');
     }
   };
+
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: () => {
+      setGoogleLoading(false);
+      setError('Google Login Failed');
+    }
+  });
 
   const [demoRoleLoading, setDemoRoleLoading] = useState(null);
 
@@ -147,11 +171,6 @@ export default function Login() {
       setDemoRoleLoading(null);
     }
   };
-
-  const loginWithGoogle = useGoogleLogin({
-    onSuccess: handleGoogleSuccess,
-    onError: () => setError('Google Login Failed')
-  });
 
   return (
     <div className="relative min-h-screen bg-transparent flex items-center justify-center p-4 transition-colors duration-200 overflow-hidden">
@@ -290,16 +309,29 @@ export default function Login() {
             {/* Google Login */}
             <button
               type="button"
-              onClick={() => loginWithGoogle()}
-              className="w-full flex items-center justify-center gap-3 bg-white/80 dark:bg-slate-900/80 text-gray-700 dark:text-gray-300 py-3 rounded-lg font-medium border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all cursor-pointer"
+              disabled={googleLoading}
+              onClick={() => {
+                setGoogleLoading(true);
+                loginWithGoogle();
+              }}
+              className="w-full flex items-center justify-center gap-3 bg-white/80 dark:bg-slate-900/80 text-gray-700 dark:text-gray-300 py-3 rounded-lg font-medium border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all cursor-pointer disabled:opacity-60"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-1 7.28-2.69l-3.57-2.77c-.99.69-2.26 1.1-3.71 1.1-2.87 0-5.3-1.94-6.16-4.53H2.16v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.11c-.22-.69-.35-1.43-.35-2.11s.13-1.42.35-2.11V7.05H2.16C1.43 8.55 1 10.22 1 12s.43 3.45 1.16 4.95l3.68-2.84z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.16 7.05l3.68 2.84c.86-2.59 3.29-4.51 6.16-4.51z" fill="#EA4335"/>
-              </svg>
-              Google
+              {googleLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm font-medium">Connecting to Google...</span>
+                </div>
+              ) : (
+                <>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-1 7.28-2.69l-3.57-2.77c-.99.69-2.26 1.1-3.71 1.1-2.87 0-5.3-1.94-6.16-4.53H2.16v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.11c-.22-.69-.35-1.43-.35-2.11s.13-1.42.35-2.11V7.05H2.16C1.43 8.55 1 10.22 1 12s.43 3.45 1.16 4.95l3.68-2.84z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.16 7.05l3.68 2.84c.86-2.59 3.29-4.51 6.16-4.51z" fill="#EA4335"/>
+                  </svg>
+                  <span>Google</span>
+                </>
+              )}
             </button>
           </form>
 
@@ -359,6 +391,66 @@ export default function Login() {
           <p>By continuing, you agree to SkillUp's Terms of Service and Privacy Policy</p>
         </div>
       </div>
+
+      {/* ── Google Sign-In & Dashboard Transition Animation Overlay ── */}
+      {(googleLoading || authSuccessData) && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="relative flex flex-col items-center max-w-sm mx-auto p-8 text-center">
+            {/* Ambient Pulse Glow */}
+            <div className="absolute w-52 h-52 bg-indigo-500/20 rounded-full blur-3xl -z-10 pointer-events-none animate-pulse" />
+
+            {authSuccessData ? (
+              /* Success / Preparing Dashboard Animation */
+              <div className="space-y-4 animate-in zoom-in-95 duration-400">
+                <div className="relative mx-auto w-16 h-16 flex items-center justify-center">
+                  <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping" />
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/30 text-white">
+                    <Check className="w-8 h-8 stroke-[2.5]" />
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold text-white tracking-tight font-display">
+                    Welcome, {authSuccessData.name || 'Learner'}!
+                  </h3>
+                  <p className="text-xs text-slate-300 mt-1 font-mono">
+                    Preparing your personalized dashboard & path...
+                  </p>
+                </div>
+
+                {/* Animated Loading Bar */}
+                <div className="w-56 mx-auto bg-slate-800/80 rounded-full h-1.5 overflow-hidden border border-slate-700/50">
+                  <div className="h-full bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-500 rounded-full w-full animate-pulse transition-all duration-1000" />
+                </div>
+              </div>
+            ) : (
+              /* Authorizing with Google Spinner */
+              <div className="space-y-4 animate-in zoom-in-95 duration-300">
+                <div className="relative mx-auto w-16 h-16 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full border-3 border-indigo-500/20 border-t-indigo-500 animate-spin" />
+                  <div className="absolute w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-md">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-1 7.28-2.69l-3.57-2.77c-.99.69-2.26 1.1-3.71 1.1-2.87 0-5.3-1.94-6.16-4.53H2.16v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.11c-.22-.69-.35-1.43-.35-2.11s.13-1.42.35-2.11V7.05H2.16C1.43 8.55 1 10.22 1 12s.43 3.45 1.16 4.95l3.68-2.84z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.16 7.05l3.68 2.84c.86-2.59 3.29-4.51 6.16-4.51z" fill="#EA4335"/>
+                    </svg>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-white tracking-tight font-display">
+                    Signing In with Google...
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Verifying authorization & establishing secure session
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
